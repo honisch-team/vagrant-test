@@ -1,0 +1,17 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "<%= box_name %>"
+  <% if box_version -%>
+  config.vm.box_version = "<%= box_version %>"
+  <% end -%>
+  <% if box_url -%>
+  config.vm.box_url = "<%= box_url %>"
+  <% end -%>
+  
+  # Modify VM 
+  config.vm.provider "virtualbox" do |v|
+    # Clock offset +1 year
+    v.customize ["modifyvm", :id, "--biossystemtimeoffset", "31536000000"]
+    # Disable time sync between host and guest
+    v.customize ["setextradata", :id, "VBoxInternal/Devices/VMMDev/0/Config/GetHostTimeDisabled", "1"]
+  end
+end

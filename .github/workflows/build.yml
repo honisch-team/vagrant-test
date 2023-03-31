@@ -1,0 +1,110 @@
+############################################################
+# Root workflow for building
+############################################################
+name: Build
+
+run-name: Build ${{github.run_id}}
+
+on: [push, workflow_dispatch]
+
+jobs:
+  # Cache installation media
+  cache-install-media:
+    runs-on: macos-12
+    steps:
+      # Check out
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      # Upgrade Mac OS tools
+      - name: Upgrade Mac OS tools
+        run: |
+          brew install bash
+          brew install gnu-sed
+          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+
+      # Set Github environment variables
+      - name: Set Github environment variables
+        run: make -f ./build/Makefile set_github_vars
+
+      # Check for cached install media
+      - name: "Check for cached install media image: ${{env.VM_INSTALL_MEDIA_FILE}}"
+        id: check-cache
+        uses: actions/cache/restore@v3
+        with:
+          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
+          path: ./install-media
+          lookup-only: true
+
+      # Download install media if no cache hit
+      - name: "Downloading install media: ${{env.VM_INSTALL_MEDIA_FILE}}"
+        if: steps.check-cache.outputs.cache-hit != 'true'
+        run: make -f ./build/Makefile get_install_media
+        
+      # Store install media in cache if no cache hit
+      - name: "Store install media in cache"
+        if: steps.check-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
+          path: ./install-media
+
+
+  # Build Vagrant box
+  build:
+    runs-on: macos-12
+    # Run after cache-install-media
+    needs: cache-install-media
+    steps:
+      # Check out
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      # Upgrade Mac OS tools
+      - name: Upgrade Mac OS tools
+        run: |
+          brew install bash
+          brew install gnu-sed
+          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+
+      # Set Github environment variables
+      - name: Set Github environment variables
+        run: make -f ./build/Makefile set_github_vars
+        
+      # Get cached install media
+      - name: Retrieve install media from cache
+        uses: actions/cache/restore@v3
+        with:
+          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
+          path: ./install-media
+          fail-on-cache-miss: true
+          
+      # Build box
+      - name: Build Vagrant box
+        run: make -f ./build/Makefile build package
+        
+      # Upload Dist artifact
+      - name: Upload Dist artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Dist
+          path: ./dist
+          retention-days: 5
+
+
+  # Test Vagrant box
+  test:
+    # Run after build
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        test-run-id: [default, clockoffset]
+
+    # Reference reusable workflow to do the actual building and testing
+    uses: ./.github/workflows/sub-test.yml
+    
+    # Pass parameters to the sub-workflow
+    with:
+      # Test run 
+      test-run-id: ${{matrix.test-run-id}}

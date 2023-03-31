@@ -1,0 +1,40 @@
+############################################################
+# Reusable workflow for testing with given parameters
+############################################################
+name: Sub-Workflow Test
+
+on: 
+  workflow_call:
+    inputs:
+      # Test run ID
+      test-run-id:
+        required: true
+        type: string
+ 
+jobs:
+  
+  # Test Vagrant box
+  test:
+    runs-on: macos-12
+    steps:
+      # Check out
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      # Upgrade Mac OS tools
+      - name: Upgrade Mac OS tools
+        run: |
+          brew install bash
+          brew install gnu-sed
+          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+
+      # Download Dist artifact
+      - name: Download Dist artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: Dist
+          path: ./dist
+
+      # Test Vagrant box
+      - name: Test Vagrant box
+        run: make -f ./test/Makefile test_run_${{inputs.test-run-id}}

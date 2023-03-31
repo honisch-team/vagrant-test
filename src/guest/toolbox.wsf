@@ -1,0 +1,184 @@
+<job>
+<script language="JScript">
+
+// Registry object
+var regWmiConn;
+
+// Shell object
+var wshShell;
+
+
+// Get wshShell
+function getWshShell() {
+  if (!wshShell) {
+    wshShell = new ActiveXObject("WScript.Shell");
+  }
+  return wshShell;
+}
+
+
+// Log message
+function log(msg) {
+  WScript.stdout.writeLine(msg);
+}
+
+
+// Trim whitespaces
+function trim(str)
+{
+  return str.replace(/^\s*|\s*$/g,"");
+}
+
+
+// Get registry WMI connection
+function getRegWmiConn() {
+  if (!regWmiConn) {
+    // Connect to registry
+    var regWmiConn = GetObject("winmgmts://./root/default:StdRegProv") 
+  }
+  return regWmiConn;
+}
+
+
+// Get registry keys
+function regGetKeys(regPath) {
+  
+  var reg = getRegWmiConn();
+  
+  // Split path into root key and sub path
+  var m = regPath.match(/^(.*?)\\(.*$)/);
+  var rootKeyName, subKeyPath;
+  if (m) {
+    rootKeyName = m[1];
+    subKeyPath = m[2];
+  } else {
+    throw new Error("Invalid registry path: " + regPath);
+  }
+  
+  var rootKey = 0;
+  if (rootKeyName.match(/^HKLM|HKEY_LOCAL_MACHINE$/i)) {
+    rootKey = 0x80000002;
+  } else if (rootKeyName.match(/^HKCU|HKEY_CURRENT_USER/i)) {
+    rootKey = 0x80000001;
+  } else {
+    throw new Error("Invalid registry root key: " + rootKeyName);
+  }
+  
+  // Enumerate sub keys
+  var inx = reg.Methods_("EnumKey").InParameters.SpawnInstance_();
+  inx.hDefKey = rootKey;
+  inx.sSubKeyName = subKeyPath;
+  var out = reg.ExecMethod_("EnumKey", inx);
+  if (out.ReturnValue) {
+    throw new Error(out.ReturnValue, "Error code: " + out.ReturnValue);
+  }
+  
+  // Return array of keys
+  return out.sNames.toArray();
+}
+
+
+// Read registry value
+function regReadValue(regPath, regValueName) {
+  var wsh = getWshShell();
+  return wsh.RegRead(regPath + "\\" + regValueName);
+}
+
+
+// Write registry value
+function regWriteValue(regPath, regValueName, regValue, regValueType) {
+  var wsh = getWshShell();
+  if (regValueType) {
+    wsh.RegWrite(regPath + "\\" + regValueName, regValue, regValueType);
+  } else {
+    wsh.RegWrite(regPath + "\\" + regValueName, regValue);
+  }
+}
+
+
+// Set netconnection profle
+function setNetConnectionProfile(location) {
+  
+  log("Setting network connection profile");
+  var locName = trim(location.toLowerCase());
+  var locDesc;
+  if (locName == "private") {
+    locDesc = "Private";
+  } else if (locName == "public") {
+    locDesc = "Public";
+  } else {
+    throw new Error("Unsupported location: " + locName);
+  }
+  
+  // Iterate profiles
+  var regProfilesPath = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkList\\Profiles";
+  var profilesKeys = regGetKeys(regProfilesPath);
+  for(var i = 0; i < profilesKeys.length; i++) {
+    var regProfilePath = regProfilesPath + "\\" +  profilesKeys[i];
+    var profileName = regReadValue(regProfilePath, "ProfileName");
+    log("  Profile: " + profileName + " => setting location to " + locDesc);
+    if (locName == "public") {
+      regWriteValue(regProfilePath, "Category", 0);
+    } else if (locName == "private") {
+      regWriteValue(regProfilePath, "Category", 1, "REG_DWORD");
+      regWriteValue(regProfilePath, "CategoryType", 0, "REG_DWORD");
+      regWriteValue(regProfilePath, "IconType", 0, "REG_DWORD");
+    } else {
+      throw new Error("Invalid location: " + locName);
+    }
+  }
+}
+
+
+// Exec command
+function execCommand(cmd, params) {
+  if (cmd == "setnetconnectionprofile") {
+    setNetConnectionProfile(params["location"]);
+  } else {
+    throw new Error("Unknown command: " + cmd);
+  }
+}
+
+
+// Main function
+function main() {
+
+  var m, s, paramKey, paramValue;
+  var namedParams = {};
+
+  // Parse parameters
+  for (var i = 0; i < WScript.arguments.length; i++) {
+    s = WScript.arguments(i).toString();
+
+    // Parse "/key:value"
+    m = s.match(/^\/(.*?):(.*)$/i);
+    if (m) {
+      paramKey = trim(m[1]).toLowerCase();
+      paramValue = m[2];
+      namedParams[paramKey] = paramValue;
+      continue;
+    }
+
+    // Parse "/key"
+    m = s.match(/^\/(.*)$/i);
+    if (m) {
+      paramKey = trim(m[1]).toLowerCase();
+      namedParams[paramKey] = true;
+      continue;
+    }
+  }
+  
+  // Check for command
+  if (!namedParams["cmd"]) {
+    throw new Error("Missing command");
+  } else {
+    execCommand(namedParams["cmd"].toLowerCase(), namedParams);
+  }
+ 
+  log("\r\nDone");
+}
+
+main();
+
+</script>
+</job>

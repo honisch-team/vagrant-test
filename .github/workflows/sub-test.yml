@@ -27,6 +27,8 @@ jobs:
           brew install bash
           brew install gnu-sed
           echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+          brew install gnu-getopt
+          echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
 
       # Download Dist artifact
       - name: Download Dist artifact

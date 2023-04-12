@@ -28,7 +28,7 @@ downloadTools() {
 
 # Display usage
 display_usage() { 
-  echo -e "Usage: $0 NAME USER PASSWORD SRC_DIR\n" 
+  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR\n" 
   echo "Update virtual machine after operating system installation"
   echo "NAME:     Name of VM"
   echo "USER:     Username for VM logon"
@@ -46,7 +46,7 @@ display_usage() {
 
 # Parse options
 EXIT_CODE=0
-VALID_ARGS=$(getopt -o hd --long help,debug: --name "$0" -- "$@") || EXIT_CODE=$?
+VALID_ARGS=$(getopt -o hd --long help,debug --name "$0" -- "$@") || EXIT_CODE=$?
 if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
 eval set -- ${VALID_ARGS}
 

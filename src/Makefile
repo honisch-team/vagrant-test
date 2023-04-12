@@ -19,6 +19,10 @@ get_install_media:
 # Build virtual machine
 build: create_vm install_os_vm update_vm
 
+# Build virtual machine in debug mode
+build_debug: VM_BUILD_DEBUG_PARAMS=--debug
+build_debug: build
+
 # Create virtual machine
 create_vm:
 	@bash $(SRC_DIR)/host/create_vm.sh $(VM_NAME) $(VM_BASE_DIR) $(VM_OS_TYPE) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
@@ -29,7 +33,7 @@ install_os_vm:
 
 # Update virtual machine after OS install
 update_vm:
-	@bash $(SRC_DIR)/host/update_vm.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(SRC_DIR)/guest
+	@bash $(SRC_DIR)/host/update_vm.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(SRC_DIR)/guest $(VM_BUILD_DEBUG_PARAMS)
 
 # Package virtual machine
 package:

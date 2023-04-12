@@ -35,20 +35,49 @@ display_usage() {
   echo "PASSWORD: Password for VM logon"
   echo "SRC_DIR:  Directory with files to copy to VM and run"
   echo ""
+  echo "Options:"
+  echo "  -h, --help       display this help and exit"
+  echo "  -d, --debug      run in debug mode (skip file cleanup etc.)"
+  echo ""
 }
 
 
 ### Main code starts here
 
-# Check for -h or --help
-if [[ ( $@ == "--help") ||  $@ == "-h" ]]
-then
-  display_usage
-  exit 0
-fi
+# Parse options
+EXIT_CODE=0
+VALID_ARGS=$(getopt -o hd --long help,debug: --name "$0" -- "$@") || EXIT_CODE=$?
+if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+eval set -- ${VALID_ARGS}
+
+# Set initial values
+OPT_DEBUG_MODE=0
+
+# extract options and arguments into variables
+while true ; do
+  case "$1" in
+    -h | --help ) 
+      display_usage
+      exit 0
+      ;;
+    -d | --debug )
+      OPT_DEBUG_MODE=1
+      shift
+      ;;
+    -- ) # end of arguments
+      shift
+      break
+      ;;
+    *) # error
+      >&2 echo "Unsupported option: $1"
+      display_usage
+      exit 1
+      ;;
+  esac
+done
 
 # Check for correct number of arguments
-if [  $# -ne 4 ]
+if [ $# -ne 4 ]
 then
   display_usage
   exit 1
@@ -64,9 +93,14 @@ VM_SRC_DIR=$4
 echo "**************************************"
 echo "*** Updating VM $VM_NAME after operating system install"
 echo "**************************************"
+if [ "$OPT_DEBUG_MODE" -ne 0 ]
+then
+  echo "Debug mode: enabled"
+  echo ""
+fi 
 
 # Download tools for setup
-downloadTools $(VM_SRC_DIR)
+downloadTools $VM_SRC_DIR
 
 # Startup VM
 echo "Starting VM $VM_NAME..."
@@ -84,7 +118,17 @@ echo "Starting update..."
 VM_SRC_DIR_BASE=$(basename $VM_SRC_DIR)
 VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat"
 
-# Wait until VM is stopped
-waitUntilVmStopped $VM_NAME
+# Cleanup
+if [ "$OPT_DEBUG_MODE" -eq 0 ]
+then
+  echo "Removing files from VM"
+  VBoxManage guestcontrol $VM_NAME rmdir --username=$VM_USER --password=$VM_PASSWORD --recursive "C:\\Temp"
+else
+  echo "Debug mode: Skip removing files from VM"
+fi
+
+# Shutdown VM
+echo "Shutting down VM..."
+stopVmViaPowerButton $VM_NAME
 
 echo "Done"

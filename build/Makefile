@@ -24,6 +24,10 @@ get_install_media:
 build:
 	@cd $(SRC_DIR) && $(MAKE) build
 
+# Build VM in debug mode
+build_debug:
+	@cd $(SRC_DIR) && $(MAKE) build_debug
+
 # Package VM
 package:
 	@cd $(SRC_DIR) && $(MAKE) package

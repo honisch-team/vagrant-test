@@ -66,7 +66,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [  $# -ne 2 ]
+if [ $# -ne 2 ]
 then
   display_usage
   exit 1

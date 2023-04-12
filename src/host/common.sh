@@ -51,15 +51,22 @@ waitUntilVmStopped() {
     return 1
   fi
 
+  local MAX_WAIT_LOOPS=60
   while [ "${VM_INFO[VMState]}" != "poweroff" ]
   do
-    echo "Waiting for VM $VM_NAME to stop..."
-    sleep 5
+    echo "Waiting for VM $VM_NAME to stop ($MAX_WAIT_LOOPS)..."
+    sleep 10
     EXIT_CODE=0
     getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
     if [ $EXIT_CODE -ne 0 ]
     then
       # exit in case of error
+      return 1
+    fi
+    let MAX_WAIT_LOOPS--
+    if [ $MAX_WAIT_LOOPS -eq 0 ]
+    then
+      echo "Exceeded max wait loops"
       return 1
     fi
   done

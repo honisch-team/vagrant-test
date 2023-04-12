@@ -55,7 +55,7 @@ netsh advfirewall firewall set rule group="remote desktop" new enable=Yes || got
 
 rem Disable password expiration
 echo.
-echo *** Disable password expiration for user %USERNAME
+echo *** Disable password expiration for user %USERNAME%
 wmic USERACCOUNT WHERE Name='%USERNAME%' SET PasswordExpires=FALSE || goto
 
 rem Disable automatic Windows activation
@@ -63,18 +63,22 @@ echo.
 echo *** Disable automatic Windows activation
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT \CurrentVersion\SoftwareProtectionPlatform\Activation" /v Manual /t REG_DWORD /d 1 /f || goto error
 
+rem Zero unused diskspace to reduce VM disk file size
+echo.
+echo *** Zero unused diskspace
+"%MYDIR%\sdelete.exe" -z c: /accepteula || goto error
+
 
 rem TODO
 rem Clean disk
-rem Delete pagefile
 rem Install Windows Updates
-rem Zero disk sysinternals sdelete
-
-
+ 
+ 
+ 
 rem Shutdown
-echo.
-shutdown /a >nul 2>&1 
-shutdown /s /f /t 10 
+rem echo.
+rem shutdown /a >nul 2>&1 
+rem shutdown /s /f /t 10 
 
 
 rem Finished

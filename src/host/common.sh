@@ -16,7 +16,7 @@ verify_checksum() {
     echo "Checksum OK"
     return 0
   else 
-    echo "Checksum MISMATCH for $CHECK_FILE"
+    echo "Checksum MISMATCH for \"$CHECK_FILE\""
     return 1
   fi
 }
@@ -26,7 +26,7 @@ verify_checksum() {
 getVmInfo() {
   local -n arr=$1
   local VM_NAME=$2
-  echo "Retrieving VM info for $VM_NAME..."
+  echo "Retrieving VM info for \"$VM_NAME\"..."
   local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
   if [ "$TMP_STR" == "" ]
   then
@@ -54,13 +54,13 @@ waitUntilVmStopped() {
   local MAX_WAIT_LOOPS=60
   while [ "${VM_INFO[VMState]}" != "poweroff" ]
   do
-    echo "Waiting for VM $VM_NAME to stop ($MAX_WAIT_LOOPS)..."
+    echo "Waiting for VM \"$VM_NAME\" to stop ($MAX_WAIT_LOOPS)..."
     sleep 10
     EXIT_CODE=0
     getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
     if [ $EXIT_CODE -ne 0 ]
     then
-      # exit in case of error
+      # in case of error
       return 1
     fi
     let MAX_WAIT_LOOPS--
@@ -70,7 +70,7 @@ waitUntilVmStopped() {
       return 1
     fi
   done
-  echo "VM $VM_NAME is stopped (State: ${VM_INFO[VMState]})"
+  echo "VM \"$VM_NAME\" is stopped (State: ${VM_INFO[VMState]})"
 }
 
 
@@ -89,13 +89,23 @@ stopVmViaPowerButton() {
   fi
   
   # If VM is running => begin shutdown
-  echo "Checking whether VM $VM_NAME is running..."
+  echo "Checking whether VM \"$VM_NAME\" is running..."
   if [ "${VM_INFO[VMState]}" == "running" ]
   then
-    echo "VM $VM_NAME is running, stopping via ACPI power button..."
-    VBoxManage controlvm $VM_NAME acpipowerbutton || exit 1
+    echo "VM \"$VM_NAME\" is running, stopping via ACPI power button..."
+    VBoxManage controlvm $VM_NAME acpipowerbutton || return 1
     waitUntilVmStopped $VM_NAME
   else
-    echo -e "VM $VM_NAME not running"
+    echo -e "VM \"$VM_NAME\" not running"
   fi
+}
+
+# Wait for VM shutdown
+waitUntilVmStartupComplete() {
+  local VM_NAME=$1
+
+  echo "Waiting for startup to complete..."
+  VBoxManage guestproperty wait $VM_NAME "/VirtualBox/GuestInfo/OS/NoLoggedInUsers" --timeout 600000 --fail-on-timeout || return 1
+  sleep 5
+  echo "VM startup complete"
 }

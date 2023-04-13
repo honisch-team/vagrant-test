@@ -4,8 +4,20 @@ set MYDIR=%~dp0
 set MYDIR=%MYDIR:~0,-1%
 
 echo *****************************
-echo *** Updating VM
+echo *** Updating VM: Script 1
 echo *****************************
+
+rem Set default values
+set OPT_DEBUG=
+set EXIT_CODE=0
+
+rem Parse options
+if "%~1"=="" goto skip_getopts
+:getopts
+if /I "%~1"=="DEBUG" set OPT_DEBUG=1
+shift 
+if not "%~1"=="" goto getopts
+:skip_getopts
 
 rem Set network connection profile to private
 rem echo.
@@ -63,23 +75,24 @@ echo.
 echo *** Disable automatic Windows activation
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT \CurrentVersion\SoftwareProtectionPlatform\Activation" /v Manual /t REG_DWORD /d 1 /f || goto error
 
-rem Zero unused diskspace to reduce VM disk file size
-echo.
-echo *** Zero unused diskspace
-"%MYDIR%\sdelete.exe" -z c: /accepteula || goto error
-
-
 rem TODO
-rem Clean disk
 rem Install Windows Updates
- 
- 
- 
-rem Shutdown
-rem echo.
-rem shutdown /a >nul 2>&1 
-rem shutdown /s /f /t 10 
+rem Disable VSS
+rem Disable restore points
+rem remove Page file
 
+
+rem Cleanup Windows Update
+echo.
+echo *** Cleanup Windows Update
+dism /Online /Cleanup-Image /spsuperseded || goto error
+
+rem Shutdown VM
+echo.
+echo *** Initiating shutdown. Continue with next update script
+shutdown /a >nul 2>&1 & shutdown /s /f /t 10 
+rem Indicate next script must be called after shutdown
+set EXIT_CODE=2
 
 rem Finished
 echo ************************************************************
@@ -97,7 +110,7 @@ echo ************************************************************
 
 :end
 if "%ERROR_OCCURRED%"=="1" (
-  cmd /c exit 1
-) else (
-  cmd /c exit 0
-)
+  set EXIT_CODE=1
+) 
+echo Script will return %EXIT_CODE%
+cmd /c exit %EXIT_CODE%

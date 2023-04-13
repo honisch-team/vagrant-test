@@ -91,7 +91,7 @@ VM_SRC_DIR=$4
 
 
 echo "**************************************"
-echo "*** Updating VM $VM_NAME after operating system install"
+echo "*** Updating VM \"$VM_NAME\" after operating system install"
 echo "**************************************"
 if [ "$OPT_DEBUG_MODE" -ne 0 ]
 then
@@ -103,20 +103,51 @@ fi
 downloadTools $VM_SRC_DIR
 
 # Startup VM
-echo "Starting VM $VM_NAME..."
+echo "Starting VM \"$VM_NAME\"..."
 VBoxManage startvm $VM_NAME --type headless
-echo "Waiting for startup to complete..."
-VBoxManage guestproperty wait $VM_NAME "/VirtualBox/GuestInfo/OS/NoLoggedInUsers" --timeout 36000000 --fail-on-timeout
-sleep 5
+waitUntilVmStartupComplete $VM_NAME
 
 # Run update
-echo "Copying update files from $VM_SRC_DIR to VM..."
-VBoxManage guestcontrol $VM_NAME mkdir --username=$VM_USER --password=$VM_PASSWORD "C:\\temp" 
+echo "Copying update files from \"$VM_SRC_DIR\" to VM..."
+VBoxManage guestcontrol $VM_NAME mkdir --username=$VM_USER --password=$VM_PASSWORD "C:\\temp" || echo "Ignoring error"
 VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp" $VM_SRC_DIR
 
-echo "Starting update..."
+echo "Running update scripts..."
 VM_SRC_DIR_BASE=$(basename $VM_SRC_DIR)
-VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat"
+VM_GUEST_PARAMS=
+if [ "$OPT_DEBUG_MODE" -ne 0 ]
+then
+  echo "Debug mode: Adding parameter \"DEBUG\" to update script"
+  VM_GUEST_PARAMS=DEBUG
+fi
+SCRIPT_COUNTER=1
+while [ -f $VM_SRC_DIR/run_update_${SCRIPT_COUNTER}.bat ]
+do
+  echo "Running run_update_${SCRIPT_COUNTER}.bat"
+  EXIT_CODE=0
+  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update_${SCRIPT_COUNTER}.bat" $VM_GUEST_PARAMS || EXIT_CODE=$?
+  echo "Script returned $EXIT_CODE (VBoxManage adds 32 to non-zero script exit codes)"
+  case "$EXIT_CODE" in
+  0)
+    echo "Success"
+    ;;
+  34)
+    echo "Success, continue after restart"
+    # Wait for VM shutdown
+    waitUntilVmStopped $VM_NAME
+    # Startup VM again
+    echo "Starting VM $VM_NAME..."
+    VBoxManage startvm $VM_NAME --type headless
+    waitUntilVmStartupComplete $VM_NAME
+    ;;
+  *)
+    echo "Script error occurred"
+    exit 1
+    ;;
+  esac
+  
+  let SCRIPT_COUNTER++
+done
 
 # Cleanup
 if [ "$OPT_DEBUG_MODE" -eq 0 ]

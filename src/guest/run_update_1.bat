@@ -51,7 +51,7 @@ powercfg.exe /change disk-timeout-ac 0 || goto error
 rem Turn off system restore
 echo.
 echo *** Turn off system restore
-wmic.exe /namespace:\\root\default Path SystemRestore Call enable "C:\" || goto error
+wmic.exe /namespace:\\root\default Path SystemRestore Call disable "C:\" || goto error
 vssadmin delete shadows /all /quiet >nul 2>&1
 
 rem Disable WinSAT
@@ -77,15 +77,17 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT \CurrentVersion\SoftwareProtectionPl
 
 rem TODO
 rem Install Windows Updates
-rem Disable VSS
-rem Disable restore points
-rem remove Page file
-
 
 rem Cleanup Windows Update
 echo.
 echo *** Cleanup Windows Update
 dism /Online /Cleanup-Image /spsuperseded || goto error
+
+rem Remove page file
+echo.
+echo *** Remove page file
+wmic computersystem where name="%computername%" set AutomaticManagedPagefile=False || goto error
+wmic pagefileset where name="C:\\pagefile.sys" delete || goto error
 
 rem Shutdown VM
 echo.

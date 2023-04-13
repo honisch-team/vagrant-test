@@ -27,6 +27,11 @@ echo *** Zero unused diskspace
 "%MYDIR%\sdelete.exe" -z c: /accepteula || goto error
 :skip_sdelete
 
+rem Add page file again on next startup
+echo.
+echo *** Add pagefile
+wmic computersystem where name="%computername%" set AutomaticManagedPagefile=True || goto error
+
 
 rem Finished
 echo ************************************************************

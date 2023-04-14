@@ -34,10 +34,9 @@ dism /Online /Cleanup-Image /spsuperseded || goto error
 rem Cleanup SoftwareDistribution\Download folder
 echo.
 echo *** Cleanup %WINDIR%\SoftwareDistribution\Download
-net stop wuauserv
+net stop wuauserv >nul 2>&1
 for /D %I in (%WINDIR%\SoftwareDistribution\Download\*.*) do (rmdir /q /s %I)
 del /Q /F %WINDIR%\SoftwareDistribution\Download\*.* >nul 2>&1
-net start wuauserv
 
 rem Remove page file
 echo.

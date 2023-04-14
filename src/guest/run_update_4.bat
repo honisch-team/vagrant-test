@@ -17,14 +17,29 @@ if "%~1"=="" goto skip_getopts
 if /I "%~1"=="DEBUG" set OPT_DEBUG=1
 shift
 if not "%~1"=="" goto getopts
-:skip_getopts
+:skip_getoptss
+
+rem Skip cleanup when in DEBUG mode
+if defined OPT_DEBUG goto skip_cleanup
+
+rem Cleanup user temp dir
+echo.
+echo *** Cleanup %TEMP%
+for /D %I in (%TEMP%\*.*) do (rmdir /q /s %I)
+del /Q /F %TEMP%\*.* >nul 2>&1
+
+rem Cleanup windows temp dir
+echo.
+echo *** Cleanup %WINDIR%\Temp
+for /D %I in (%WINDIR%\Temp\*.*) do (rmdir /q /s %I)
+del /Q /F %WINDIR%\Temp\*.* >nul 2>&1
 
 rem Zero unused diskspace to reduce VM disk file size
 if defined OPT_DEBUG goto skip_sdelete
 echo.
 echo *** Zero unused diskspace
 "%MYDIR%\sdelete.exe" -z c: /accepteula || goto error
-:skip_sdelete
+:skip_cleanup
 
 rem Add page file again on next startup
 echo.

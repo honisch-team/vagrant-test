@@ -23,6 +23,11 @@ downloadTools() {
   echo "Downloading Sysinternals SDelete..."
   local SDELETE_URL=https://download.sysinternals.com/files/SDelete.zip
   (cd $TOOLS_DIR && curl -o a.zip $SDELETE_URL && unzip -o a.zip && rm a.zip)
+  
+  # Download KB3138612 to fix Windows Update
+  echo "Downloading KB3138612..."
+  local KB3138612_URL=https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2016/02/windows6.1-kb3138612-x86_6e90531daffc13bc4e92ecea890e501e807c621f.msu
+  (cd $TOOLS_DIR && curl -o kb3138612.msu $KB3138612_URL)
 }
 
 

@@ -85,6 +85,12 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Na
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v NavPaneExpandToCurrentFolder /t REG_DWORD /d 1 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowEncryptCompressedColor /t REG_DWORD /d 1 /f
 
+rem Install KB3138612 to fix Windows Update
+echo.
+echo *** Installing KB3138612 to fix Windows Update
+wusa "%MYDIR%\kb3138612.msu" /quiet /norestart
+echo WUSA returned %ERRORLEVEL%
+set EXIT_CODE=2
 
 rem Finished
 echo ************************************************************

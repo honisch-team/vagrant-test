@@ -34,7 +34,7 @@ function trim(str)
 function getRegWmiConn() {
   if (!regWmiConn) {
     // Connect to registry
-    var regWmiConn = GetObject("winmgmts://./root/default:StdRegProv") 
+    var regWmiConn = GetObject("winmgmts://./root/default:StdRegProv")
   }
   return regWmiConn;
 }
@@ -42,9 +42,9 @@ function getRegWmiConn() {
 
 // Get registry keys
 function regGetKeys(regPath) {
-  
+
   var reg = getRegWmiConn();
-  
+
   // Split path into root key and sub path
   var m = regPath.match(/^(.*?)\\(.*$)/);
   var rootKeyName, subKeyPath;
@@ -54,7 +54,7 @@ function regGetKeys(regPath) {
   } else {
     throw new Error("Invalid registry path: " + regPath);
   }
-  
+
   var rootKey = 0;
   if (rootKeyName.match(/^HKLM|HKEY_LOCAL_MACHINE$/i)) {
     rootKey = 0x80000002;
@@ -63,7 +63,7 @@ function regGetKeys(regPath) {
   } else {
     throw new Error("Invalid registry root key: " + rootKeyName);
   }
-  
+
   // Enumerate sub keys
   var inx = reg.Methods_("EnumKey").InParameters.SpawnInstance_();
   inx.hDefKey = rootKey;
@@ -72,7 +72,7 @@ function regGetKeys(regPath) {
   if (out.ReturnValue) {
     throw new Error(out.ReturnValue, "Error code: " + out.ReturnValue);
   }
-  
+
   // Return array of keys
   return out.sNames.toArray();
 }
@@ -98,7 +98,7 @@ function regWriteValue(regPath, regValueName, regValue, regValueType) {
 
 // Set netconnection profle
 function setNetConnectionProfile(location) {
-  
+
   log("Setting network connection profile");
   var locName = trim(location.toLowerCase());
   var locDesc;
@@ -109,7 +109,7 @@ function setNetConnectionProfile(location) {
   } else {
     throw new Error("Unsupported location: " + locName);
   }
-  
+
   // Iterate profiles
   var regProfilesPath = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkList\\Profiles";
   var profilesKeys = regGetKeys(regProfilesPath);
@@ -132,9 +132,9 @@ function setNetConnectionProfile(location) {
 
 // Install Windows Updates
 function installWindowsUpdates() {
-  
+
   log("Installing Windows Updates...");
-  
+
   // New update session
   var updateSession = new ActiveXObject("Microsoft.Update.Session");
   updateSession.ClientApplicationID = "MSDN Sample Script";
@@ -166,13 +166,13 @@ function installWindowsUpdates() {
       log("  " + (i + 1).toString()  + ": Skipping because it requires user input: " + update.Title);
       continue;
     }
-    
+
     // Check for EULA
     if (!update.EulaAccepted) {
       log("  " + (i + 1).toString()  + ": Accepting EULA: " + update.Title);
       update.AcceptEula();
     }
-    
+
     // Add update to download list
     log("  " + (i + 1).toString()  + ": Adding to download list: " + update.Title);
     updatesToDownload.Add(update);
@@ -181,9 +181,10 @@ function installWindowsUpdates() {
   // If no updates selected for download => finish
   if (updatesToDownload.Count == 0) {
     log("  All applicable updates were skipped");
+    // Result "0" indicates "Finished"
     return 0;
   }
-    
+
   // Downloading updates
   log("Downloading updates...");
   var downloader = updateSession.CreateUpdateDownloader();
@@ -209,31 +210,34 @@ function installWindowsUpdates() {
   // If no updates selected for download => finish
   if (updatesToInstall.Count == 0) {
     log("  No updates were successfully downloaded");
-    return 1;
+    // Result "2" indicates "reboot and retry"
+    return 2;
   }
   // Check if reboot may be required
   if (rebootMayBeRequired) {
     log("  Reboot may be required");
   }
- 
+
   // Install updates
   log("  Installing updates...");
   var installer = updateSession.CreateUpdateInstaller();
   installer.Updates = updatesToInstall;
   installationResult = installer.Install();
- 
+
   // Installation results
   log("  Installation Result: " + installationResult.ResultCode.toString());
   log("  Reboot Required: " + (installationResult.RebootRequired ? "true" : "false"));
   log("  Installed updates and install results:");
   for (var i = 0; i < updatesToInstall.Count; i++) {
     var update = updatesToInstall.Item(i);
-    log("  " + (i + 1).toString()  + ": " + update.Title + ": " 
+    log("  " + (i + 1).toString()  + ": " + update.Title + ": "
       + installationResult.GetUpdateResult(i).ResultCode);
   }
   if (installationResult.RebootRequired) {
-    return 1;
+    // Result "2" indicates "reboot and retry"
+    return 2;
   } else {
+    // Result "0" indicates "Finished"
     return 0;
   }
 }
@@ -278,7 +282,7 @@ function main() {
       continue;
     }
   }
-  
+
   // Check for command
   var result = 0;
   if (!namedParams["cmd"]) {
@@ -286,11 +290,12 @@ function main() {
   } else {
     result = execCommand(namedParams["cmd"].toLowerCase(), namedParams);
   }
- 
+
   log("\r\nDone");
   return result;
 }
 
+// On uncaught exception, WSH exits with exit code "1"
 WScript.Quit(main());
 
 </script>

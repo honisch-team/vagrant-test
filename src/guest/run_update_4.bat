@@ -15,7 +15,7 @@ rem Parse options
 if "%~1"=="" goto skip_getopts
 :getopts
 if /I "%~1"=="DEBUG" set OPT_DEBUG=1
-shift 
+shift
 if not "%~1"=="" goto getopts
 :skip_getopts
 
@@ -38,21 +38,16 @@ wmic computersystem where name="%computername%" set AutomaticManagedPagefile=Tru
 
 rem Finished
 echo ************************************************************
-echo *** Success
+echo *** Finished updating VM: Script 4 (%EXIT_CODE%)
 echo ************************************************************
-
 goto end
 
 :error
 set ERROR_OCCURRED=1
-
+set EXIT_CODE=1
 echo ************************************************************
-echo *** ERROR 
+echo *** ERROR while updating VM: Script 4 (%EXIT_CODE%)
 echo ************************************************************
 
 :end
-if "%ERROR_OCCURRED%"=="1" (
-  set EXIT_CODE=1
-) 
-echo Script will return %EXIT_CODE%
 cmd /c exit %EXIT_CODE%

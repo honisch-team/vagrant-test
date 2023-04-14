@@ -15,7 +15,7 @@ rem Parse options
 if "%~1"=="" goto skip_getopts
 :getopts
 if /I "%~1"=="DEBUG" set OPT_DEBUG=1
-shift 
+shift
 if not "%~1"=="" goto getopts
 :skip_getopts
 
@@ -44,15 +44,15 @@ reg add "HKLM\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell" /v 
 rem Set power settings
 echo.
 echo *** Set power settings
-powercfg.exe /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c || goto error
-powercfg.exe /change monitor-timeout-ac 0 || goto error
-powercfg.exe /change disk-timeout-ac 0 || goto error
-powercfg.exe /hibernate off >nul 2>&1
+powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c || goto error
+powercfg /change monitor-timeout-ac 0 || goto error
+powercfg /change disk-timeout-ac 0 || goto error
+powercfg /hibernate off >nul 2>&1
 
 rem Turn off system restore
 echo.
 echo *** Turn off system restore
-wmic.exe /namespace:\\root\default Path SystemRestore Call disable "C:\" || goto error
+wmic /namespace:\\root\default Path SystemRestore Call disable "C:\" || goto error
 vssadmin delete shadows /all /quiet >nul 2>&1
 
 rem Disable WinSAT
@@ -85,44 +85,19 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Na
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v NavPaneExpandToCurrentFolder /t REG_DWORD /d 1 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowEncryptCompressedColor /t REG_DWORD /d 1 /f
 
-rem TODO
-rem Install Windows Updates
-
-rem Cleanup Windows Update
-echo.
-echo *** Cleanup Windows Update
-dism /Online /Cleanup-Image /spsuperseded || goto error
-
-rem Remove page file
-echo.
-echo *** Remove page file
-wmic computersystem where name="%computername%" set AutomaticManagedPagefile=False || goto error
-wmic pagefileset where name="C:\\pagefile.sys" delete || goto error
-
-rem Shutdown VM
-echo.
-echo *** Initiating shutdown. Continue with next update script
-shutdown /a >nul 2>&1 & shutdown /s /f /t 10 
-rem Indicate next script must be called after shutdown
-set EXIT_CODE=2
 
 rem Finished
 echo ************************************************************
-echo *** Success
+echo *** Finished updating VM: Script 1 (%EXIT_CODE%)
 echo ************************************************************
-
 goto end
 
 :error
 set ERROR_OCCURRED=1
-
+set EXIT_CODE=1
 echo ************************************************************
-echo *** ERROR 
+echo *** ERROR while updating VM: Script 1 (%EXIT_CODE%)
 echo ************************************************************
 
 :end
-if "%ERROR_OCCURRED%"=="1" (
-  set EXIT_CODE=1
-) 
-echo Script will return %EXIT_CODE%
 cmd /c exit %EXIT_CODE%

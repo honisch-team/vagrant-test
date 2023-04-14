@@ -4,7 +4,7 @@ set MYDIR=%~dp0
 set MYDIR=%MYDIR:~0,-1%
 
 echo *****************************
-echo *** Updating VM: Script 3
+echo *** Updating VM: Script 2
 echo *****************************
 
 rem Set default values
@@ -19,28 +19,24 @@ shift
 if not "%~1"=="" goto getopts
 :skip_getopts
 
-rem Cleanup Windows Update
-echo.
-echo *** Cleanup Windows Update
-dism /Online /Cleanup-Image /spsuperseded || goto error
 
-rem Remove page file
+rem Install Windows updates
 echo.
-echo *** Remove page file
-wmic computersystem where name="%computername%" set AutomaticManagedPagefile=False || goto error
-wmic pagefileset where name="C:\\pagefile.sys" delete || goto error
-
-rem Shutdown VM
-echo.
-echo *** Initiating shutdown. Continue with next update script
-shutdown /a >nul 2>&1 & shutdown /s /f /t 10
-rem Indicate next script must be called after shutdown
-set EXIT_CODE=2
+echo *** Installing Windows updates
+CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:installwindowsupdates
+set UPDATE_RESULT=%ERRORLEVEL%
+if %UPDATE_RESULT% equ 0 (
+  echo Update script indicates success
+)
+if %UPDATE_RESULT% equ 2 (
+  echo Update script indicates success + reboot + continue
+  set EXIT_CODE=2
+)
 
 
 rem Finished
 echo ************************************************************
-echo *** Finished updating VM: Script 3 (%EXIT_CODE%)
+echo *** Finished updating VM: Script 2 (%EXIT_CODE%)
 echo ************************************************************
 goto end
 
@@ -48,7 +44,7 @@ goto end
 set ERROR_OCCURRED=1
 set EXIT_CODE=1
 echo ************************************************************
-echo *** ERROR while updating VM: Script 3 (%EXIT_CODE%)
+echo *** ERROR while updating VM: Script 2 (%EXIT_CODE%)
 echo ************************************************************
 
 :end

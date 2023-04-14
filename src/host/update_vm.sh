@@ -18,7 +18,7 @@ source $SCRIPT_DIR/common.sh
 # Download tools for setup
 downloadTools() {
   local TOOLS_DIR=$1
-  
+
   # Download "sdelete"
   echo "Downloading Sysinternals SDelete..."
   local SDELETE_URL=https://download.sysinternals.com/files/SDelete.zip
@@ -27,8 +27,8 @@ downloadTools() {
 
 
 # Display usage
-display_usage() { 
-  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR\n" 
+display_usage() {
+  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR\n"
   echo "Update virtual machine after operating system installation"
   echo "NAME:     Name of VM"
   echo "USER:     Username for VM logon"
@@ -56,7 +56,7 @@ OPT_DEBUG_MODE=0
 # extract options and arguments into variables
 while true ; do
   case "$1" in
-    -h | --help ) 
+    -h | --help )
       display_usage
       exit 0
       ;;
@@ -97,7 +97,7 @@ if [ "$OPT_DEBUG_MODE" -ne 0 ]
 then
   echo "Debug mode: enabled"
   echo ""
-fi 
+fi
 
 # Download tools for setup
 downloadTools $VM_SRC_DIR
@@ -121,18 +121,39 @@ then
   VM_GUEST_PARAMS=DEBUG
 fi
 SCRIPT_COUNTER=1
+MAX_UPDATE_LOOPS=10
 while [ -f $VM_SRC_DIR/run_update_${SCRIPT_COUNTER}.bat ]
 do
-  echo "Running run_update_${SCRIPT_COUNTER}.bat"
+  # Abort after maximum of update loops has been reached
+  let MAX_UPDATE_LOOPS--
+  if [ $MAX_UPDATE_LOOPS -eq 0 ]
+  then
+    echo "Exceeded max update loops"
+    return 1
+  fi
+
+  # Run script
+  echo "Running run_update_${SCRIPT_COUNTER}.bat ($MAX_UPDATE_LOOPS)"
   EXIT_CODE=0
   VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update_${SCRIPT_COUNTER}.bat" $VM_GUEST_PARAMS || EXIT_CODE=$?
   echo "Script returned $EXIT_CODE (VBoxManage adds 32 to non-zero script exit codes)"
   case "$EXIT_CODE" in
-  0)
-    echo "Success"
+  0) # Script exit code 0: Success, run next script
+    echo "Success, continue with next script"
+    let SCRIPT_COUNTER++
     ;;
-  34)
-    echo "Success, continue after restart"
+  34)  # Script exit code 2: Success, reboot and run next script
+    echo "Success, continue with next script after restart"
+    # Wait for VM shutdown
+    waitUntilVmStopped $VM_NAME
+    # Startup VM again
+    echo "Starting VM $VM_NAME..."
+    VBoxManage startvm $VM_NAME --type headless
+    waitUntilVmStartupComplete $VM_NAME
+    let SCRIPT_COUNTER++
+    ;;
+  35) # Script exit code 3: Success, reboot and run same script again
+    echo "Success, restart and call script again"
     # Wait for VM shutdown
     waitUntilVmStopped $VM_NAME
     # Startup VM again
@@ -140,13 +161,15 @@ do
     VBoxManage startvm $VM_NAME --type headless
     waitUntilVmStartupComplete $VM_NAME
     ;;
-  *)
+  36) # Script exit code 4: Success, run same script again
+    echo "Success, call script again"
+    ;;
+  *) # Treat all other exit codes as error
     echo "Script error occurred"
     exit 1
     ;;
   esac
-  
-  let SCRIPT_COUNTER++
+
 done
 
 # Cleanup

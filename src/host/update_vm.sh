@@ -126,7 +126,7 @@ then
   VM_GUEST_PARAMS=DEBUG
 fi
 SCRIPT_COUNTER=1
-MAX_UPDATE_LOOPS=10
+MAX_UPDATE_LOOPS=20
 while [ -f $VM_SRC_DIR/run_update_${SCRIPT_COUNTER}.bat ]
 do
   # Abort after maximum of update loops has been reached

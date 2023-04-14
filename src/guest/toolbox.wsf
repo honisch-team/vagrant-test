@@ -300,10 +300,15 @@ function main() {
   if (!namedParams["cmd"]) {
     throw new Error("Missing command");
   } else {
-    result = execCommand(namedParams["cmd"].toLowerCase(), namedParams);
+    res = execCommand(namedParams["cmd"].toLowerCase(), namedParams);
+    if (typeof(res) == "boolean") {
+      result = (res ? 0 : -1);
+    } else if (typeof(res) == "number") {
+      result = res;
+    }
   }
 
-  log("\r\nDone");
+  log("\r\nDone (Result:" + result.toString() + ")");
   return result;
 }
 

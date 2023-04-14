@@ -54,6 +54,11 @@ if %EXIT_CODE% equ 2 (
   echo *** Initiating shutdown. Continue with next update script
   shutdown /a >nul 2>&1 & shutdown /s /f /t 10
 )
+if %EXIT_CODE% equ 3 (
+  echo.
+  echo *** Initiating shutdown. Continue with same update script (re-run)
+  shutdown /a >nul 2>&1 & shutdown /s /f /t 10
+)
 echo ************************************************************
 echo *** Finished updating VM: Script 3 (%EXIT_CODE%)
 echo ************************************************************

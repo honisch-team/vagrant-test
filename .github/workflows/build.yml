@@ -81,9 +81,17 @@ jobs:
           path: ./install-media
           fail-on-cache-miss: true
           
-      # Build box
+      # Create VM and install OS
+      - name: Create VM and install OS
+        run: make -f ./src/Makefile create_vm install_os_vm
+        
+      # Update VM
+      - name: Update VM
+        run: make -f ./src/Makefile update_vm
+        
+      # Package box
       - name: Build Vagrant box
-        run: make -f ./build/Makefile build package
+        run: make -f ./build/Makefile package
         
       # Upload Dist artifact
       - name: Upload Dist artifact

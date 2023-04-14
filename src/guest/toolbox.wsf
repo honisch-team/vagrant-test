@@ -142,7 +142,7 @@ function installWindowsUpdates() {
   // Search for updates
   log("  Searching for updates...");
   var updateSearcher = updateSession.CreateUpdateSearcher();
-  var searchResult = updateSearcher.Search("IsInstalled=0 and Type='Software' and IsHidden=0");
+  var searchResult = updateSearcher.Search("IsInstalled=0 and Type='Software' and IsHidden=0 and BrowseOnly=0");
 
   // List updates
   log("  List of applicable items on the machine:");

@@ -192,7 +192,7 @@ function installWindowsUpdates() {
   downloader.Download();
 
   // Check downloaded updates
-  var updatesToInstall = CreateObject("Microsoft.Update.UpdateColl");
+  var updatesToInstall = new ActiveXObject("Microsoft.Update.UpdateColl");
   var rebootMayBeRequired = false;
 
   log("Successfully downloaded updates:");

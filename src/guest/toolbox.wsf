@@ -131,9 +131,13 @@ function setNetConnectionProfile(location) {
 
 
 // Install Windows Updates
-function installWindowsUpdates() {
+function installWindowsUpdates(maxUpdates) {
 
   log("Installing Windows Updates...");
+  
+  if (maxUpdates) {
+    log("  Max Windows Update batch size: " + maxUpdates);
+  }
 
   // New update session
   var updateSession = new ActiveXObject("Microsoft.Update.Session");
@@ -176,6 +180,14 @@ function installWindowsUpdates() {
     // Add update to download list
     log("  " + (i + 1).toString()  + ": Adding to download list: " + update.Title);
     updatesToDownload.Add(update);
+    
+    // Observer max batch size
+    if (maxUpdates) {
+      if (updatesToDownload.Count >= maxUpdates) {
+        log("  Max batch size reached");
+        break;
+      }
+    }
   }
 
   // If no updates selected for download => finish
@@ -248,7 +260,7 @@ function execCommand(cmd, params) {
   if (cmd == "setnetconnectionprofile") {
     return setNetConnectionProfile(params["location"]);
   } else if (cmd == "installwindowsupdates") {
-    return installWindowsUpdates();
+    return installWindowsUpdates(params["maxupdates"]);
   } else {
     throw new Error("Unknown command: " + cmd);
   }

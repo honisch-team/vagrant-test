@@ -22,7 +22,7 @@ if not "%~1"=="" goto getopts
 rem Install Windows updates
 echo.
 echo *** Installing Windows updates
-CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:installwindowsupdates
+CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:installwindowsupdates /maxUpdates:10
 set UPDATE_RESULT=%ERRORLEVEL%
 rem Script indicates success
 if %UPDATE_RESULT% equ 0 (

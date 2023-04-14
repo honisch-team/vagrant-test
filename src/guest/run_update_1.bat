@@ -47,6 +47,7 @@ echo *** Set power settings
 powercfg.exe /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c || goto error
 powercfg.exe /change monitor-timeout-ac 0 || goto error
 powercfg.exe /change disk-timeout-ac 0 || goto error
+powercfg.exe /hibernate off >nul 2>&1
 
 rem Turn off system restore
 echo.
@@ -74,6 +75,15 @@ rem Disable automatic Windows activation
 echo.
 echo *** Disable automatic Windows activation
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT \CurrentVersion\SoftwareProtectionPlatform\Activation" /v Manual /t REG_DWORD /d 1 /f || goto error
+
+rem Configure Windows Explorer
+echo.
+echo *** Configure Windows Explorer settings
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Hidden /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v HideFileExt /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v NavPaneShowAllFolders /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v NavPaneExpandToCurrentFolder /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowEncryptCompressedColor /t REG_DWORD /d 1 /f
 
 rem TODO
 rem Install Windows Updates

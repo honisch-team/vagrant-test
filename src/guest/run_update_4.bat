@@ -4,7 +4,7 @@ set MYDIR=%~dp0
 set MYDIR=%MYDIR:~0,-1%
 
 echo *****************************
-echo *** Updating VM: Script 2
+echo *** Updating VM: Script 4
 echo *****************************
 
 rem Set default values
@@ -19,6 +19,9 @@ shift
 if not "%~1"=="" goto getopts
 :skip_getopts
 
+
+rem TODO
+rem Disable Windows Update
 
 rem Zero unused diskspace to reduce VM disk file size
 if defined OPT_DEBUG goto skip_sdelete

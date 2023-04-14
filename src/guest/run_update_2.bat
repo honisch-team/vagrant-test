@@ -25,15 +25,21 @@ echo.
 echo *** Installing Windows updates
 CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:installwindowsupdates
 set UPDATE_RESULT=%ERRORLEVEL%
+rem Script indicates success
 if %UPDATE_RESULT% equ 0 (
   echo Update script indicates success
+  goto finished
 )
+rem Script indicates success + reboot
 if %UPDATE_RESULT% equ 2 (
   echo Update script indicates success + reboot + continue
   set EXIT_CODE=2
+  goto finished
 )
+rem Treat other exit codes as error
+set EXIT_CODE=1
 
-
+:finished
 rem Finished
 echo ************************************************************
 echo *** Finished updating VM: Script 2 (%EXIT_CODE%)

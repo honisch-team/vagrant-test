@@ -219,11 +219,11 @@ function installWindowsUpdates(maxUpdates) {
     }
   }
 
-  // If no updates selected for download => finish
+  // If no updates were downloaded successfully => reboot and retry
   if (updatesToInstall.Count == 0) {
     log("  No updates were successfully downloaded");
-    // Result "2" indicates "reboot and retry"
-    return 2;
+    // Result "3" indicates "reboot and re-run"
+    return 3;
   }
   // Check if reboot may be required
   if (rebootMayBeRequired) {
@@ -246,8 +246,8 @@ function installWindowsUpdates(maxUpdates) {
       + installationResult.GetUpdateResult(i).ResultCode);
   }
   if (installationResult.RebootRequired) {
-    // Result "2" indicates "reboot and retry"
-    return 2;
+    // Result "3" indicates "reboot and re-run"
+    return 3;
   } else {
     // Result "0" indicates "Finished"
     return 0;

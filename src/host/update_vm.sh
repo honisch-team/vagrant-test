@@ -157,7 +157,7 @@ do
     waitUntilVmStartupComplete $VM_NAME
     let SCRIPT_COUNTER++
     ;;
-  35) # Script exit code 3: Success, reboot and run same script again
+  35) # Script exit code 3: Success, reboot and re-run the script
     echo "Success, restart and call script again"
     # Wait for VM shutdown
     waitUntilVmStopped $VM_NAME

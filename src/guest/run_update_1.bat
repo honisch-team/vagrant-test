@@ -20,7 +20,6 @@ if not "%~1"=="" goto getopts
 :skip_getopts
 
 rem Set network connection profile to private
-rem echo.
 echo.
 echo *** Set network connection profile to private
 CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:setnetconnectionprofile /location:private || goto error

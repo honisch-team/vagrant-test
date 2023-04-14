@@ -19,10 +19,6 @@ shift
 if not "%~1"=="" goto getopts
 :skip_getopts
 
-
-rem TODO
-rem Disable Windows Update
-
 rem Zero unused diskspace to reduce VM disk file size
 if defined OPT_DEBUG goto skip_sdelete
 echo.
@@ -35,8 +31,13 @@ echo.
 echo *** Add pagefile
 wmic computersystem where name="%computername%" set AutomaticManagedPagefile=True || goto error
 
-
 rem Finished
+:finished
+if %EXIT_CODE% equ 2 (
+  echo.
+  echo *** Initiating shutdown. Continue with next update script
+  shutdown /a >nul 2>&1 & shutdown /s /f /t 10
+)
 echo ************************************************************
 echo *** Finished updating VM: Script 4 (%EXIT_CODE%)
 echo ************************************************************

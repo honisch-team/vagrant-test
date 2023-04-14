@@ -19,7 +19,6 @@ shift
 if not "%~1"=="" goto getopts
 :skip_getopts
 
-
 rem Install Windows updates
 echo.
 echo *** Installing Windows updates
@@ -37,7 +36,7 @@ if %UPDATE_RESULT% equ 2 (
   goto finished
 )
 rem Treat other exit codes as error
-set EXIT_CODE=1
+goto error
 
 rem Finished
 :finished
@@ -46,7 +45,6 @@ if %EXIT_CODE% equ 2 (
   echo *** Initiating shutdown. Continue with next update script
   shutdown /a >nul 2>&1 & shutdown /s /f /t 10
 )
-
 echo ************************************************************
 echo *** Finished updating VM: Script 2 (%EXIT_CODE%)
 echo ************************************************************

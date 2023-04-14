@@ -89,10 +89,26 @@ rem Install KB3138612 to fix Windows Update
 echo.
 echo *** Installing KB3138612 to fix Windows Update
 wusa "%MYDIR%\kb3138612.msu" /quiet /norestart
-echo WUSA returned %ERRORLEVEL%
-set EXIT_CODE=2
+if %ERRORLEVEL% equ 0 (
+  echo Returncode %ERRORLEVEL% indicates success
+  goto after_kb3138612
+)
+if %ERRORLEVEL% equ 3010 (
+  echo Returncode %ERRORLEVEL% indicates success + reboot required
+  set EXIT_CODE=2
+  goto after_kb3138612
+)
+echo *** Error installing KB3138612 (%ERRORLEVEL%)
+goto error
+:after_kb3138612
 
 rem Finished
+:finished
+if %EXIT_CODE% equ 2 (
+  echo.
+  echo *** Initiating shutdown. Continue with next update script
+  shutdown /a >nul 2>&1 & shutdown /s /f /t 10
+)
 echo ************************************************************
 echo *** Finished updating VM: Script 1 (%EXIT_CODE%)
 echo ************************************************************

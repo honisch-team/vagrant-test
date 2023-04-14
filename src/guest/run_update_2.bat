@@ -39,8 +39,14 @@ if %UPDATE_RESULT% equ 2 (
 rem Treat other exit codes as error
 set EXIT_CODE=1
 
-:finished
 rem Finished
+:finished
+if %EXIT_CODE% equ 2 (
+  echo.
+  echo *** Initiating shutdown. Continue with next update script
+  shutdown /a >nul 2>&1 & shutdown /s /f /t 10
+)
+
 echo ************************************************************
 echo *** Finished updating VM: Script 2 (%EXIT_CODE%)
 echo ************************************************************

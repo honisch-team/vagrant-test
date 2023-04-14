@@ -87,6 +87,7 @@ jobs:
         
       # Update VM
       - name: Update VM
+        timeout-minutes: 720
         run: make -f ./src/Makefile update_vm
         
       # Package box

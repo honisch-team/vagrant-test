@@ -41,8 +41,12 @@ display_usage() {
   echo "SRC_DIR:  Directory with files to copy to VM and run"
   echo ""
   echo "Options:"
-  echo "  -h, --help       display this help and exit"
-  echo "  -d, --debug      run in debug mode (skip file cleanup etc.)"
+  echo "  -h, --help          display this help and exit"
+  echo "  --no-install-wu     don't install windows updates"
+  echo "  --no-cleanup-dism   don't cleanup using DISM"
+  echo "  --no-cleanup-wud    don't cleanup Windows Updates downloads"
+  echo "  --no-cleanup-files  don't cleanup various files"
+  echo "  --no-zerodisk       don't zero free disk space"
   echo ""
 }
 
@@ -51,12 +55,16 @@ display_usage() {
 
 # Parse options
 EXIT_CODE=0
-VALID_ARGS=$(getopt -o hd --long help,debug --name "$0" -- "$@") || EXIT_CODE=$?
+VALID_ARGS=$(getopt -o h --long help,no-install-wu,no-cleanup-dism,no-cleanup-wud,no-cleanup-files,no-zerodisk --name "$0" -- "$@") || EXIT_CODE=$?
 if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
 eval set -- ${VALID_ARGS}
 
 # Set initial values
-OPT_DEBUG_MODE=0
+OPT_NO_INSTALL_WU=0
+OPT_NO_CLEANUP_DISM=0
+OPT_NO_CLEANUP_WUD=0
+OPT_NO_CLEANUP_FILES=0
+OPT_NO_ZERODISK=0
 
 # extract options and arguments into variables
 while true ; do
@@ -65,8 +73,24 @@ while true ; do
       display_usage
       exit 0
       ;;
-    -d | --debug )
-      OPT_DEBUG_MODE=1
+    --no-install-wu )
+      OPT_NO_INSTALL_WU=1
+      shift
+      ;;
+    --no-cleanup-dism )
+      OPT_NO_CLEANUP_DISM=1
+      shift
+      ;;
+    --no-cleanup-wud )
+      OPT_NO_CLEANUP_WUD=1
+      shift
+      ;;
+    --no-cleanup-files )
+      OPT_NO_CLEANUP_FILES=1
+      shift
+      ;;
+    --no-zerodisk )
+      OPT_NO_ZERODISK=1
       shift
       ;;
     -- ) # end of arguments
@@ -98,10 +122,31 @@ VM_SRC_DIR=$4
 echo "**************************************"
 echo "*** Updating VM \"$VM_NAME\" after operating system install"
 echo "**************************************"
-if [ "$OPT_DEBUG_MODE" -ne 0 ]
+VM_GUEST_PARAMS=()
+if [ "$OPT_NO_INSTALL_WU" -ne 0 ]
 then
-  echo "Debug mode: enabled"
-  echo ""
+  echo "Don't install Windows Updates"
+  VM_GUEST_PARAMS+=(NO_INSTALL_WU)
+fi
+if [ "$OPT_NO_CLEANUP_DISM" -ne 0 ]
+then
+  echo "Don't cleanup using DISM"
+  VM_GUEST_PARAMS+=(NO_CLEANUP_DISM)
+fi
+if [ "$OPT_NO_CLEANUP_WUD" -ne 0 ]
+then
+  echo "Don't cleanup downloaded Windows Updates in SoftwareDistribution dir"
+  VM_GUEST_PARAMS+=(NO_CLEANUP_WUD)
+fi
+if [ "$OPT_NO_CLEANUP_FILES" -ne 0 ]
+then
+  echo "Don't cleanup various files"
+  VM_GUEST_PARAMS+=(NO_CLEANUP_FILES)
+fi
+if [ "$OPT_NO_ZERODISK" -ne 0 ]
+then
+  echo "Don't zero free diskspace"
+  VM_GUEST_PARAMS+=(NO_ZERODISK)
 fi
 
 # Download tools for setup
@@ -117,48 +162,32 @@ echo "Copying update files from \"$VM_SRC_DIR\" to VM..."
 VBoxManage guestcontrol $VM_NAME mkdir --username=$VM_USER --password=$VM_PASSWORD "C:\\temp" || echo "Ignoring error"
 VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp" $VM_SRC_DIR
 
-echo "Running update scripts..."
+echo "Running update script..."
 VM_SRC_DIR_BASE=$(basename $VM_SRC_DIR)
-VM_GUEST_PARAMS=
-if [ "$OPT_DEBUG_MODE" -ne 0 ]
-then
-  echo "Debug mode: Adding parameter \"DEBUG\" to update script"
-  VM_GUEST_PARAMS=DEBUG
-fi
-SCRIPT_COUNTER=1
+UPDATE_SCRIPT_FINISHED=0
 MAX_UPDATE_LOOPS=20
-while [ -f $VM_SRC_DIR/run_update_${SCRIPT_COUNTER}.bat ]
+while [ $UPDATE_SCRIPT_FINISHED -eq 0 ]
 do
   # Abort after maximum of update loops has been reached
   let MAX_UPDATE_LOOPS--
   if [ $MAX_UPDATE_LOOPS -eq 0 ]
   then
     echo "Exceeded max update loops"
-    return 1
+    exit 1
   fi
 
   # Run script
-  echo "Running run_update_${SCRIPT_COUNTER}.bat ($MAX_UPDATE_LOOPS)"
+  echo "Running run_update.bat ($MAX_UPDATE_LOOPS runs left before abort)"
   EXIT_CODE=0
-  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update_${SCRIPT_COUNTER}.bat" $VM_GUEST_PARAMS || EXIT_CODE=$?
+  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
   echo "Script returned $EXIT_CODE (VBoxManage adds 32 to non-zero script exit codes)"
   case "$EXIT_CODE" in
-  0) # Script exit code 0: Success, run next script
-    echo "Success, continue with next script"
-    let SCRIPT_COUNTER++
+  0) # Script exit code 0: Success, update finished
+    echo "Success, update finished"
+    UPDATE_SCRIPT_FINISHED=1
     ;;
-  34)  # Script exit code 2: Success, reboot and run next script
-    echo "Success, continue with next script after restart"
-    # Wait for VM shutdown
-    waitUntilVmStopped $VM_NAME
-    # Startup VM again
-    echo "Starting VM $VM_NAME..."
-    VBoxManage startvm $VM_NAME --type headless
-    waitUntilVmStartupComplete $VM_NAME
-    let SCRIPT_COUNTER++
-    ;;
-  35) # Script exit code 3: Success, reboot and re-run the script
-    echo "Success, restart and call script again"
+  34)  # Script exit code 2: Reboot VM and re-run update script
+    echo "Reboot VM and re-run update script"
     # Wait for VM shutdown
     waitUntilVmStopped $VM_NAME
     # Startup VM again
@@ -166,8 +195,8 @@ do
     VBoxManage startvm $VM_NAME --type headless
     waitUntilVmStartupComplete $VM_NAME
     ;;
-  36) # Script exit code 4: Success, run same script again
-    echo "Success, call script again"
+  35)  # Script exit code 3: Re-run update script
+    echo "Re-run update script"
     ;;
   *) # Treat all other exit codes as error
     echo "Script error occurred"
@@ -178,7 +207,7 @@ do
 done
 
 # Cleanup
-if [ "$OPT_DEBUG_MODE" -eq 0 ]
+if [ "$OPT_NO_CLEANUP_FILES" -eq 0 ]
 then
   echo "Removing files from VM"
   VBoxManage guestcontrol $VM_NAME rmdir --username=$VM_USER --password=$VM_PASSWORD --recursive "C:\\Temp"

@@ -33,11 +33,8 @@ install_os_vm:
 
 # Update virtual machine after OS install
 .PHONY: update_vm
-ifdef DEBUG_MODE
-update_vm: VM_BUILD_DEBUG_PARAMS=--debug
-endif
 update_vm:
-	@bash $(SRC_DIR)/host/update_vm.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(SRC_DIR)/guest $(VM_BUILD_DEBUG_PARAMS)
+	@bash $(SRC_DIR)/host/update_vm.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(SRC_DIR)/guest $(UPDATE_VM_OPTS)
 
 # Package virtual machine
 .PHONY: package

@@ -131,6 +131,11 @@ function setNetConnectionProfile(location) {
 
 
 // Install Windows Updates
+// Possible return values:
+//   0: Updates were installed successfully
+//   2: Updates were installed successfully, reboot is required
+//   3: No updates found
+
 function installWindowsUpdates(maxUpdates) {
 
   log("Installing Windows Updates...");
@@ -156,7 +161,7 @@ function installWindowsUpdates(maxUpdates) {
   }
   if (searchResult.Updates.Count == 0) {
     log("  There are no applicable updates.");
-    return 0;
+    return 3;
   }
 
   // Prepare list of updates to download
@@ -190,11 +195,11 @@ function installWindowsUpdates(maxUpdates) {
     }
   }
 
-  // If no updates selected for download => finish
+  // If no updates were selected for download => finished
   if (updatesToDownload.Count == 0) {
     log("  All applicable updates were skipped");
-    // Result "0" indicates "Finished"
-    return 0;
+    // Result "3" indicates "no updates found"
+    return 3;
   }
 
   // Downloading updates
@@ -221,9 +226,9 @@ function installWindowsUpdates(maxUpdates) {
 
   // If no updates were downloaded successfully => reboot and retry
   if (updatesToInstall.Count == 0) {
-    log("  No updates were successfully downloaded");
-    // Result "3" indicates "reboot and re-run"
-    return 3;
+    log("  No updates were successfully downloaded => reboot and retry");
+    // Result "2" indicates "reboot required"
+    return 2;
   }
   // Check if reboot may be required
   if (rebootMayBeRequired) {
@@ -246,10 +251,12 @@ function installWindowsUpdates(maxUpdates) {
       + installationResult.GetUpdateResult(i).ResultCode);
   }
   if (installationResult.RebootRequired) {
-    // Result "3" indicates "reboot and re-run"
-    return 3;
+    // Result "2" indicates "reboot required"
+    log("  Finished installing updates, reboot is required");
+    return 2;
   } else {
-    // Result "0" indicates "Finished"
+    // Result "0" indicates "Updates successfully installed"
+    log("  Finished installing updates");
     return 0;
   }
 }

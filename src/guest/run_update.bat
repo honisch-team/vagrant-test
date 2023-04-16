@@ -18,6 +18,7 @@ if /I "%~1"=="NO_CLEANUP_DISM" set NO_CLEANUP_DISM=1 & echo Skip cleanup Windows
 if /I "%~1"=="NO_CLEANUP_WUD" set NO_CLEANUP_WUD=1 & echo Skip cleanup %WINDIR%\SoftwareDistribution\Download & goto next_opt
 if /I "%~1"=="NO_CLEANUP_FILES" set NO_CLEANUP_FILES=1 & echo Skip cleanup various files & goto next_opt
 if /I "%~1"=="NO_ZERODISK" set NO_ZERODISK=1 & echo Skip cleanup %WINDIR%\SoftwareDistribution\Download & goto next_opt
+if /I "%~1"=="NO_CLEANMGR" set NO_CLEANMGR=1 & echo Skip Windows CleanMgr & goto next_opt
 echo *** Warning: Unknown option "%~1"
 :next_opt
 shift
@@ -113,13 +114,13 @@ if %ERRORLEVEL% equ 3010 (
 )
 if %ERRORLEVEL% neq 0 goto error
 
+rem Install Windows updates
 :install_windows_updates
 echo.
 if defined NO_INSTALL_WU (
   echo *** Skip installing Windows Updates
   goto after_install_windows_updates
 )
-rem Install Windows updates
 echo *** Installing Windows Updates
 CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:installwindowsupdates /maxUpdates:50
 rem Script indicates success
@@ -143,30 +144,76 @@ rem Treat other exit codes as error
 goto error
 :after_install_windows_updates
 
+rem Cleanup Windows Update
 :cleanup_windows_update
 echo.
 if defined NO_CLEANUP_DISM (
   echo *** Skip cleanup Windows Update
   goto after_cleanup_windows_update
 )
-rem Cleanup Windows Update
 echo *** Cleanup Windows Update
 dism /Online /Cleanup-Image /spsuperseded || goto error
 
 rem Reboot and continue
 echo.
 echo *** Reboot and continue
-set UPDATE_NEXT_ENTRY_POINT=cleanup_windows_update_downloads
+set UPDATE_NEXT_ENTRY_POINT=cleanup_cleanmgr
 goto reboot_and_continue
 :after_cleanup_windows_update
 
+rem Run Windows CleanMgr
+:cleanup_cleanmgr
+echo.
+if defined NO_CLEANMGR (
+  echo *** Skip cleanup using Windows CleanMgr
+  goto after_cleanup_cleanmgr
+)
+echo *** Cleanup using Windows CleanMgr
+rem Prepare registry
+set CLEANMGR_GROUP=StateFlags0064
+set CLEANMGR_ROOT_KEY=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches
+set CLEANMGR_GROUP=StateFlags0064
+set CLEANMGR_ROOT_KEY=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches
+reg add "%CLEANMGR_ROOT_KEY%\Active Setup Temp Folders" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Downloaded Program Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Internet Cache Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Memory Dump Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Old ChkDsk Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Previous Installations" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Recycle Bin" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\ServicePack Cleanup" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Setup Log Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\System error memory dump files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\System error minidump files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Temporary Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Temporary Setup Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Thumbnail Cache" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Update Cleanup" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Upgrade Discarded Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Windows Error Reporting Archive Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Windows Error Reporting Queue Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Windows Error Reporting System Archive Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Windows Error Reporting System Queue Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+reg add "%CLEANMGR_ROOT_KEY%\Windows Upgrade Log Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
+rem Run cleanup
+echo *** Starting cleanmgr
+cleanmgr /sagerun:64
+echo Cleanmgr returned %ERRORLEVEL%
+
+rem Reboot and continue
+echo.
+echo *** Reboot and continue
+set UPDATE_NEXT_ENTRY_POINT=cleanup_windows_update_downloads
+goto reboot_and_continue
+:after_cleanup_cleanmgr
+
+rem Cleanup SoftwareDistribution\Download folder
 :cleanup_windows_update_downloads
 echo.
 if defined NO_CLEANUP_WUD (
   echo *** Skip cleanup %WINDIR%\SoftwareDistribution\Download
   goto after_cleanup_windows_update_downloads
 )
-rem Cleanup SoftwareDistribution\Download folder
 echo.
 echo *** Cleanup %WINDIR%\SoftwareDistribution\Download
 net stop wuauserv >nul 2>&1
@@ -195,12 +242,16 @@ echo *** Reboot and continue
 set UPDATE_NEXT_ENTRY_POINT=cleanup_files
 goto reboot_and_continue
 
+
+rem Cleanup various files
 :cleanup_files
 echo.
 if defined NO_CLEANUP_FILES (
   echo *** Skip cleanup various files
   goto after_cleanup_files
 )
+ech *** DEBUG Skipping cleanup files ***
+goto after_cleanup_files
 rem Cleanup user temp dir
 echo *** Cleanup %TEMP%
 for /D %%I in (%TEMP%\*.*) do (
@@ -217,15 +268,22 @@ for /D %%I in (%WINDIR%\Temp\*.*) do (
   rmdir /q /s %%I
 )
 del /Q /F %WINDIR%\Temp\*.* >nul 2>&1
+
+rem Cleanup log files
+echo.
+echo *** Cleanup log files
+del /Q /F C:\*.log >nul 2>&1
+del /Q /F C:\Windows\WindowsUpdate.log >nul 2>&1
+
 :after_cleanup_files
 
+rem Zero free diskspace to reduce VM disk file size
 :zero_free_diskspace
 echo.
 if defined NO_ZERODISK (
   echo *** Skip zeroing free diskspace
   goto after_zero_free_diskspace
 )
-rem Zero free diskspace to reduce VM disk file size
 echo *** Zeroing free diskspace
 "%MYDIR%\sdelete.exe" -z c: /accepteula || goto error
 :after_zero_free_diskspace

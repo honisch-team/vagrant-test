@@ -46,6 +46,7 @@ display_usage() {
   echo "  --no-cleanup-dism   don't cleanup using DISM"
   echo "  --no-cleanup-wud    don't cleanup Windows Updates downloads"
   echo "  --no-cleanup-files  don't cleanup various files"
+  echo "  --no-cleanmgr       don't use Windows CleanMgr (Disk Cleanup)"
   echo "  --no-zerodisk       don't zero free disk space"
   echo ""
 }
@@ -55,7 +56,7 @@ display_usage() {
 
 # Parse options
 EXIT_CODE=0
-VALID_ARGS=$(getopt -o h --long help,no-install-wu,no-cleanup-dism,no-cleanup-wud,no-cleanup-files,no-zerodisk --name "$0" -- "$@") || EXIT_CODE=$?
+VALID_ARGS=$(getopt -o h --long help,no-install-wu,no-cleanup-dism,no-cleanup-wud,no-cleanup-files,no-cleanmgr,no-zerodisk --name "$0" -- "$@") || EXIT_CODE=$?
 if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
 eval set -- ${VALID_ARGS}
 
@@ -65,6 +66,7 @@ OPT_NO_CLEANUP_DISM=0
 OPT_NO_CLEANUP_WUD=0
 OPT_NO_CLEANUP_FILES=0
 OPT_NO_ZERODISK=0
+OPT_NO_CLEANMGR=0
 
 # extract options and arguments into variables
 while true ; do
@@ -87,6 +89,10 @@ while true ; do
       ;;
     --no-cleanup-files )
       OPT_NO_CLEANUP_FILES=1
+      shift
+      ;;
+    --no-cleanmgr )
+      OPT_NO_CLEANMGR=1
       shift
       ;;
     --no-zerodisk )
@@ -147,6 +153,11 @@ if [ "$OPT_NO_ZERODISK" -ne 0 ]
 then
   echo "Don't zero free diskspace"
   VM_GUEST_PARAMS+=(NO_ZERODISK)
+fi
+if [ "$OPT_NO_CLEANMGR" -ne 0 ]
+then
+  echo "Don't use Windows CleanMgr"
+  VM_GUEST_PARAMS+=(NO_CLEANMGR)
 fi
 
 # Download tools for setup

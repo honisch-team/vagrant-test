@@ -68,6 +68,7 @@ jobs:
           echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
           brew install gnu-getopt
           echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
+          brew install --cask vmware-fusion
 
       # Set Github environment variables
       - name: Set Github environment variables

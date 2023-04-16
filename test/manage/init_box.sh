@@ -45,15 +45,15 @@ OPT_VAGRANT_FILE=
 # extract options and arguments into variables
 while true ; do
   case "$1" in
-    -h | --help ) 
+    -h | --help) 
       display_usage
       exit 0
       ;;
-    -v | --vagrantfile )
+    -v | --vagrantfile)
       OPT_VAGRANT_FILE="$2"
       shift 2
       ;;
-    -- ) # end of arguments
+    --) # end of arguments
       shift
       break
       ;;
@@ -66,8 +66,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 2 ]
-then
+if [ $# -ne 2 ] ; then
   display_usage
   exit 1
 fi
@@ -80,22 +79,19 @@ echo "**************************************"
 echo "*** Initialize Vagrant box \"$VG_BOX_NAME\""
 echo "**************************************"
 echo "Test env. dir: $VG_TEST_DIR"
-if [ "$OPT_VAGRANT_FILE" != "" ]
-then
+if [ "$OPT_VAGRANT_FILE" != "" ] ; then
   echo "Vagrantfile template: $OPT_VAGRANT_FILE"
 fi
 echo ""
 
 # Create test dir if required
-if [ ! -d $VG_TEST_DIR ]
-then
+if [ ! -d $VG_TEST_DIR ] ; then
   mkdir $VG_TEST_DIR
 fi
 
 # Init environment
 echo "Initializing Vagrant test environment in \"$VG_TEST_DIR\""
-if [ "$OPT_VAGRANT_FILE" != "" ]
-then
+if [ "$OPT_VAGRANT_FILE" != "" ] ; then
   (cd $VG_TEST_DIR && vagrant init --force --template $OPT_VAGRANT_FILE $VG_BOX_NAME)
 else
   (cd $VG_TEST_DIR && vagrant init --force -m $VG_BOX_NAME)

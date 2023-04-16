@@ -71,35 +71,35 @@ OPT_NO_CLEANMGR=0
 # extract options and arguments into variables
 while true ; do
   case "$1" in
-    -h | --help )
+    -h | --help)
       display_usage
       exit 0
       ;;
-    --no-install-wu )
+    --no-install-wu)
       OPT_NO_INSTALL_WU=1
       shift
       ;;
-    --no-cleanup-dism )
+    --no-cleanup-dism)
       OPT_NO_CLEANUP_DISM=1
       shift
       ;;
-    --no-cleanup-wud )
+    --no-cleanup-wud)
       OPT_NO_CLEANUP_WUD=1
       shift
       ;;
-    --no-cleanup-files )
+    --no-cleanup-files)
       OPT_NO_CLEANUP_FILES=1
       shift
       ;;
-    --no-cleanmgr )
+    --no-cleanmgr)
       OPT_NO_CLEANMGR=1
       shift
       ;;
-    --no-zerodisk )
+    --no-zerodisk)
       OPT_NO_ZERODISK=1
       shift
       ;;
-    -- ) # end of arguments
+    --) # end of arguments
       shift
       break
       ;;
@@ -112,8 +112,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 4 ]
-then
+if [ $# -ne 4 ] ; then
   display_usage
   exit 1
 fi
@@ -129,33 +128,27 @@ echo "**************************************"
 echo "*** Updating VM \"$VM_NAME\" after operating system install"
 echo "**************************************"
 VM_GUEST_PARAMS=()
-if [ "$OPT_NO_INSTALL_WU" -ne 0 ]
-then
+if [ "$OPT_NO_INSTALL_WU" -ne 0 ] ; then
   echo "Don't install Windows Updates"
   VM_GUEST_PARAMS+=(NO_INSTALL_WU)
 fi
-if [ "$OPT_NO_CLEANUP_DISM" -ne 0 ]
-then
+if [ "$OPT_NO_CLEANUP_DISM" -ne 0 ] ; then
   echo "Don't cleanup using DISM"
   VM_GUEST_PARAMS+=(NO_CLEANUP_DISM)
 fi
-if [ "$OPT_NO_CLEANUP_WUD" -ne 0 ]
-then
+if [ "$OPT_NO_CLEANUP_WUD" -ne 0 ] ; then
   echo "Don't cleanup downloaded Windows Updates in SoftwareDistribution dir"
   VM_GUEST_PARAMS+=(NO_CLEANUP_WUD)
 fi
-if [ "$OPT_NO_CLEANUP_FILES" -ne 0 ]
-then
+if [ "$OPT_NO_CLEANUP_FILES" -ne 0 ] ; then
   echo "Don't cleanup various files"
   VM_GUEST_PARAMS+=(NO_CLEANUP_FILES)
 fi
-if [ "$OPT_NO_ZERODISK" -ne 0 ]
-then
+if [ "$OPT_NO_ZERODISK" -ne 0 ] ; then
   echo "Don't zero free diskspace"
   VM_GUEST_PARAMS+=(NO_ZERODISK)
 fi
-if [ "$OPT_NO_CLEANMGR" -ne 0 ]
-then
+if [ "$OPT_NO_CLEANMGR" -ne 0 ] ; then
   echo "Don't use Windows CleanMgr"
   VM_GUEST_PARAMS+=(NO_CLEANMGR)
 fi
@@ -181,8 +174,7 @@ while [ $UPDATE_SCRIPT_FINISHED -eq 0 ]
 do
   # Abort after maximum of update loops has been reached
   let MAX_UPDATE_LOOPS--
-  if [ $MAX_UPDATE_LOOPS -eq 0 ]
-  then
+  if [ $MAX_UPDATE_LOOPS -eq 0 ] ; then
     echo "Exceeded max update loops"
     exit 1
   fi
@@ -218,8 +210,7 @@ do
 done
 
 # Cleanup
-if [ "$OPT_NO_CLEANUP_FILES" -eq 0 ]
-then
+if [ "$OPT_NO_CLEANUP_FILES" -eq 0 ] ; then
   echo "Removing files from VM"
   VBoxManage guestcontrol $VM_NAME rmdir --username=$VM_USER --password=$VM_PASSWORD --recursive "C:\\Temp"
 else

@@ -33,15 +33,13 @@ display_usage() {
 ### Main code starts here
 
 # Check for -h or --help
-if [[ ($@ == "--help") || $@ == "-h" ]]
-then
+if [[ ($@ == "--help") || $@ == "-h" ]] ; then
   display_usage
   exit 0
 fi
 
 # Check for correct number of arguments
-if [ $# -ne 7 ]
-then
+if [ $# -ne 7 ] ; then
   display_usage
   exit 1
 fi
@@ -67,8 +65,7 @@ echo "Video RAM: $VM_VIDEO_RAM MB"
 echo ""
 
 # Create base dir if required
-if [ ! -d $VM_BASE_DIR ]
-then
+if [ ! -d $VM_BASE_DIR ] ; then
   mkdir $VM_BASE_DIR
 fi
 

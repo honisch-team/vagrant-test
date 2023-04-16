@@ -11,8 +11,7 @@ verify_checksum() {
   shasum -c $CHECKSUM_FILE
   local SHASUM_EXITCODE=$?
   rm -f $CHECKSUM_FILE
-  if [ $SHASUM_EXITCODE -eq 0 ]
-  then
+  if [ $SHASUM_EXITCODE -eq 0 ] ; then
     echo "Checksum OK"
     return 0
   else 
@@ -28,8 +27,7 @@ getVmInfo() {
   local VM_NAME=$2
   echo "Retrieving VM info for \"$VM_NAME\"..."
   local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
-  if [ "$TMP_STR" == "" ]
-  then
+  if [ "$TMP_STR" == "" ] ; then
     echo "VM not found"
     return 1
   fi
@@ -45,8 +43,7 @@ waitUntilVmStopped() {
   local -A VM_INFO
   local EXIT_CODE=0
   getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
-  if [ $EXIT_CODE -ne 0 ]
-  then
+  if [ $EXIT_CODE -ne 0 ] ; then
     # if VM was not found, we're done
     return 1
   fi
@@ -58,14 +55,12 @@ waitUntilVmStopped() {
     sleep 10
     EXIT_CODE=0
     getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
-    if [ $EXIT_CODE -ne 0 ]
-    then
+    if [ $EXIT_CODE -ne 0 ] ; then
       # in case of error
       return 1
     fi
     let MAX_WAIT_LOOPS--
-    if [ $MAX_WAIT_LOOPS -eq 0 ]
-    then
+    if [ $MAX_WAIT_LOOPS -eq 0 ] ; then
       echo "Exceeded max wait loops"
       return 1
     fi
@@ -82,16 +77,14 @@ stopVmViaPowerButton() {
   local -A VM_INFO
   local EXIT_CODE=0
   getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
-  if [ $EXIT_CODE -ne 0 ]
-  then
+  if [ $EXIT_CODE -ne 0 ] ; then
     # if VM was not found, we're done
     return 1
   fi
   
   # If VM is running => begin shutdown
   echo "Checking whether VM \"$VM_NAME\" is running..."
-  if [ "${VM_INFO[VMState]}" == "running" ]
-  then
+  if [ "${VM_INFO[VMState]}" == "running" ] ; then
     echo "VM \"$VM_NAME\" is running, stopping via ACPI power button..."
     VBoxManage controlvm $VM_NAME acpipowerbutton || return 1
     waitUntilVmStopped $VM_NAME

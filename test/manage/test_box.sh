@@ -25,8 +25,7 @@ testVersionStr() {
   STR_EXPECTED="Microsoft Windows [Version 6.1.7601]"
   echo "  Result  : $STR"
   echo "  Expected: $STR_EXPECTED"
-  if [ "$STR" == "$STR_EXPECTED" ]
-  then
+  if [ "$STR" == "$STR_EXPECTED" ] ; then
     echo "  => Success"
     return 0
   else
@@ -48,15 +47,13 @@ display_usage() {
 ### Main code starts here
 
 # Check for -h or --help
-if [[ ($@ == "--help") || $@ == "-h" ]]
-then
+if [[ ($@ == "--help") || $@ == "-h" ]] ; then
   display_usage
   exit 0
 fi
 
 # Check for correct number of arguments
-if [ $# -ne 1 ]
-then
+if [ $# -ne 1 ] ; then
   display_usage
   exit 1
 fi
@@ -77,8 +74,7 @@ cd $VG_TEST_DIR
 testVersionStr || TESTS_FAILED=1
 
 # Check for test result
-if [ $TESTS_FAILED -ne 0 ]
-then
+if [ $TESTS_FAILED -ne 0 ] ; then
   echo "There are FAILED tests"
   exit 1
 else

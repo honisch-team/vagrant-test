@@ -197,8 +197,7 @@ reg add "%CLEANMGR_ROOT_KEY%\Windows Error Reporting System Queue Files" /v %CLE
 reg add "%CLEANMGR_ROOT_KEY%\Windows Upgrade Log Files" /v %CLEANMGR_GROUP% /t REG_DWORD /d 2 /f
 rem Run cleanup
 echo *** Starting cleanmgr
-cleanmgr /sagerun:64
-echo Cleanmgr returned %ERRORLEVEL%
+cleanmgr /sagerun:64 || goto error
 
 rem Reboot and continue
 echo.
@@ -242,7 +241,6 @@ echo *** Reboot and continue
 set UPDATE_NEXT_ENTRY_POINT=cleanup_files
 goto reboot_and_continue
 
-
 rem Cleanup various files
 :cleanup_files
 echo.
@@ -250,8 +248,7 @@ if defined NO_CLEANUP_FILES (
   echo *** Skip cleanup various files
   goto after_cleanup_files
 )
-ech *** DEBUG Skipping cleanup files ***
-goto after_cleanup_files
+
 rem Cleanup user temp dir
 echo *** Cleanup %TEMP%
 for /D %%I in (%TEMP%\*.*) do (
@@ -274,7 +271,6 @@ echo.
 echo *** Cleanup log files
 del /Q /F C:\*.log >nul 2>&1
 del /Q /F C:\Windows\WindowsUpdate.log >nul 2>&1
-
 :after_cleanup_files
 
 rem Zero free diskspace to reduce VM disk file size

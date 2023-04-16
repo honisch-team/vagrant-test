@@ -31,15 +31,13 @@ display_usage() {
 ### Main code starts here
 
 # Check for -h or --help
-if [[ ($@ == "--help") || $@ == "-h" ]]
-then
+if [[ ($@ == "--help") || $@ == "-h" ]] ; then
   display_usage
   exit 0
 fi
 
 # Check for correct number of arguments
-if [ $# -ne 5 ]
-then
+if [ $# -ne 5 ] ; then
   display_usage
   exit 1
 fi

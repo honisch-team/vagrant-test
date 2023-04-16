@@ -5,8 +5,7 @@ isBoxInstalled() {
   local BOX_NAME=$1
   echo "Checking if box \"$BOX_NAME\" is installed..."
   local BOX_INSTALLED=$(vagrant box list --machine-readable | grep -c ",box-name,test-box$")
-  if [ $BOX_INSTALLED -eq 0 ]
-  then
+  if [ $BOX_INSTALLED -eq 0 ] ; then
     echo "Box $BOX_NAME is NOT installed"
     return 1
   fi
@@ -35,15 +34,13 @@ destroyBox() {
   
   echo "Checking for test environment \"$TEST_DIR\"..."
   # Check for environment dir
-  if [ ! -d $TEST_DIR ]
-  then
+  if [ ! -d $TEST_DIR ] ; then
     echo "Test environment not found"
     return 1
   fi
 
   # Check for Vagrantfile
-  if [ ! -f $TEST_DIR/Vagrantfile ]
-  then
+  if [ ! -f $TEST_DIR/Vagrantfile ] ; then
     echo "Test environment not valid"
     return 1
   fi

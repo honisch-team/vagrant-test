@@ -28,15 +28,13 @@ display_usage() {
 ### Main code starts here
 
 # Check for -h or --help
-if [[ ($@ == "--help") || $@ == "-h" ]]
-then
+if [[ ($@ == "--help") || $@ == "-h" ]] ; then
   display_usage
   exit 0
 fi
 
 # Check for correct number of arguments
-if [ $# -ne 2 ]
-then
+if [ $# -ne 2 ] ; then
   display_usage
   exit 1
 fi
@@ -55,8 +53,7 @@ echo ""
 EXIT_CODE=0
 isBoxInstalled $VG_BOX_NAME || EXIT_CODE=$?
 
-if [ $EXIT_CODE -ne 0 ]
-then
+if [ $EXIT_CODE -ne 0 ] ; then
   # Add box
   echo "Adding box..."
   vagrant box add $VG_BOX_FILE --name $VG_BOX_NAME

@@ -13,7 +13,7 @@ failure() {
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
 # Include common stuff
-source $SCRIPT_DIR/common.sh
+source $SCRIPT_DIR/common_vbx.sh
 
 # Display usage
 display_usage() {
@@ -54,7 +54,7 @@ VM_HDD=$6
 VM_VIDEO_RAM=$7
 
 echo "**************************************"
-echo "*** Creating VM $VM_NAME"
+echo "*** Creating VM \"$VM_NAME\""
 echo "**************************************"
 echo "Base dir: $VM_BASE_DIR"
 echo "Operating System: $VM_OS_TYPE"
@@ -66,11 +66,11 @@ echo ""
 
 # Create base dir if required
 if [ ! -d $VM_BASE_DIR ] ; then
-  mkdir $VM_BASE_DIR
+  mkdir -p $VM_BASE_DIR
 fi
 
 # Create VM
-echo "Creating VM $VM_NAME in $VM_BASE_DIR..."
+echo "Creating VM \"$VM_NAME\" in \"$VM_BASE_DIR\"..."
 VBoxManage createvm --name $VM_NAME --ostype $VM_OS_TYPE --basefolder $VM_BASE_DIR --register
 
 # Add controller
@@ -79,7 +79,7 @@ VBoxManage storagectl $VM_NAME --name "SATA" --add sata --controller IntelAHCI
 
 # Create virtual disk
 VM_VDI=$VM_BASE_DIR/$VM_NAME/$VM_NAME.vdi
-echo "Creating virtual disk $VM_VDI..."
+echo "Creating virtual disk \"$VM_VDI\"..."
 VBoxManage createhd disk --filename $VM_VDI --size $VM_HDD
 
 # Attach disk
@@ -91,4 +91,4 @@ echo "Configuring VM..."
 VBoxManage modifyvm $VM_NAME --memory $VM_RAM --vram $VM_VIDEO_RAM --cpus $VM_CPU_COUNT --ioapic on \
   --graphicscontroller vboxsvga --audio none --usbohci on --mouse usb --pae off --clipboard=hosttoguest
 
-echo "Done"
+echo "Done creating VM \"$VM_NAME\""

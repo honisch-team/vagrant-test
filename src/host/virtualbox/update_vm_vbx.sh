@@ -13,7 +13,7 @@ failure() {
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
 # Include common stuff
-source $SCRIPT_DIR/common.sh
+source $SCRIPT_DIR/common_vbx.sh
 
 # Download tools for setup
 downloadTools() {
@@ -23,7 +23,7 @@ downloadTools() {
   echo "Downloading Sysinternals SDelete..."
   local SDELETE_URL=https://download.sysinternals.com/files/SDelete.zip
   (cd $TOOLS_DIR && curl -o a.zip $SDELETE_URL && unzip -o a.zip && rm a.zip)
-  
+
   # Download KB3138612 to fix Windows Update
   echo "Downloading KB3138612..."
   local KB3138612_URL=https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2016/02/windows6.1-kb3138612-x86_6e90531daffc13bc4e92ecea890e501e807c621f.msu
@@ -33,12 +33,13 @@ downloadTools() {
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR\n"
+  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR WORK_DIR\n"
   echo "Update virtual machine after operating system installation"
-  echo "NAME:     Name of VM"
-  echo "USER:     Username for VM logon"
-  echo "PASSWORD: Password for VM logon"
-  echo "SRC_DIR:  Directory with files to copy to VM and run"
+  echo "NAME:      Name of VM"
+  echo "USER:      Username for VM logon"
+  echo "PASSWORD:  Password for VM logon"
+  echo "SRC_DIR:   Directory with files to copy to VM and run"
+  echo "WORK_DIR:  Working dir for intermediate files"
   echo ""
   echo "Options:"
   echo "  -h, --help          display this help and exit"
@@ -112,7 +113,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 4 ] ; then
+if [ $# -ne 5 ] ; then
   display_usage
   exit 1
 fi
@@ -122,6 +123,7 @@ VM_NAME=$1
 VM_USER=$2
 VM_PASSWORD=$3
 VM_SRC_DIR=$4
+VM_WORK_DIR=$5
 
 
 echo "**************************************"
@@ -153,8 +155,14 @@ if [ "$OPT_NO_CLEANMGR" -ne 0 ] ; then
   VM_GUEST_PARAMS+=(NO_CLEANMGR)
 fi
 
+# Create work dir if required
+if [ ! -d $VM_WORK_DIR ] ; then
+  mkdir -p $VM_WORK_DIR
+fi
+cp "$VM_SRC_DIR"/* "$VM_WORK_DIR/" || true
+
 # Download tools for setup
-downloadTools $VM_SRC_DIR
+downloadTools $VM_WORK_DIR
 
 # Startup VM
 echo "Starting VM \"$VM_NAME\"..."
@@ -164,10 +172,10 @@ waitUntilVmStartupComplete $VM_NAME
 # Run update
 echo "Copying update files from \"$VM_SRC_DIR\" to VM..."
 VBoxManage guestcontrol $VM_NAME mkdir --username=$VM_USER --password=$VM_PASSWORD "C:\\temp" || echo "Ignoring error"
-VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp" $VM_SRC_DIR
+VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp" $VM_WORK_DIR
 
 echo "Running update script..."
-VM_SRC_DIR_BASE=$(basename $VM_SRC_DIR)
+VM_SRC_DIR_BASE=$(basename $VM_WORK_DIR)
 UPDATE_SCRIPT_FINISHED=0
 MAX_UPDATE_LOOPS=20
 while [ $UPDATE_SCRIPT_FINISHED -eq 0 ]
@@ -194,7 +202,7 @@ do
     # Wait for VM shutdown
     waitUntilVmStopped $VM_NAME
     # Startup VM again
-    echo "Starting VM $VM_NAME..."
+    echo "Starting VM ..."
     VBoxManage startvm $VM_NAME --type headless
     waitUntilVmStartupComplete $VM_NAME
     ;;
@@ -221,4 +229,4 @@ fi
 echo "Shutting down VM..."
 stopVmViaPowerButton $VM_NAME
 
-echo "Done"
+echo "Done updating VM"

@@ -1,26 +1,5 @@
 # Common shell code
 
-# Verify file checksum
-verify_checksum() {
-  local CHECK_FILE=$1
-  local CHECKSUM=$2
-
-  echo "Verifying checksum for $CHECK_FILE"
-  local CHECKSUM_FILE=$(mktemp)
-  echo "$CHECKSUM  $CHECK_FILE" > $CHECKSUM_FILE
-  shasum -c $CHECKSUM_FILE
-  local SHASUM_EXITCODE=$?
-  rm -f $CHECKSUM_FILE
-  if [ $SHASUM_EXITCODE -eq 0 ] ; then
-    echo "Checksum OK"
-    return 0
-  else 
-    echo "Checksum MISMATCH for \"$CHECK_FILE\""
-    return 1
-  fi
-}
-
-
 # Get VM info
 getVmInfo() {
   local -n arr=$1
@@ -72,7 +51,7 @@ waitUntilVmStopped() {
 # Stop VM via ACPI power button
 stopVmViaPowerButton() {
   local VM_NAME=$1
-  
+
   # Get VM info
   local -A VM_INFO
   local EXIT_CODE=0
@@ -81,7 +60,7 @@ stopVmViaPowerButton() {
     # if VM was not found, we're done
     return 1
   fi
-  
+
   # If VM is running => begin shutdown
   echo "Checking whether VM \"$VM_NAME\" is running..."
   if [ "${VM_INFO[VMState]}" == "running" ] ; then
@@ -93,7 +72,8 @@ stopVmViaPowerButton() {
   fi
 }
 
-# Wait for VM shutdown
+
+# Wait for VM to start up
 waitUntilVmStartupComplete() {
   local VM_NAME=$1
 

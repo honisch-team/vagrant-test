@@ -50,73 +50,31 @@ jobs:
           path: ./install-media
 
 
-  # Build Vagrant box
-  build:
-    runs-on: macos-12
+  # Build and test Vagrant box
+  build-and-test:
     # Run after cache-install-media
     needs: cache-install-media
-    steps:
-      # Check out
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      # Upgrade Mac OS tools
-      - name: Upgrade Mac OS tools
-        run: |
-          brew install bash
-          brew install gnu-sed
-          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
-          brew install gnu-getopt
-          echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
-          brew install --cask vmware-fusion
 
-      # Set Github environment variables
-      - name: Set Github environment variables
-        run: make -f ./build/Makefile set_github_vars
-        
-      # Get cached install media
-      - name: Retrieve install media from cache
-        uses: actions/cache/restore@v3
-        with:
-          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
-          path: ./install-media
-          fail-on-cache-miss: true
-          
-      # Create VM and install OS
-      - name: Create VM and install OS
-        run: make -f ./src/Makefile create_vm install_os_vm
-        
-      # Update VM
-      - name: Update VM
-        timeout-minutes: 720
-        run: make -f ./src/Makefile update_vm
-        
-      # Package box
-      - name: Build Vagrant box
-        run: make -f ./build/Makefile package
-        
-      # Upload Dist artifact
-      - name: Upload Dist artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Dist
-          path: ./dist
-          retention-days: 5
-
-
-  # Test Vagrant box
-  test:
-    # Run after build
-    needs: build
+    # Build using different virtualization providers
     strategy:
       fail-fast: false
       matrix:
-        test-run-id: [default, clockoffset]
-
+        include:
+          - virt-provider-name: virtualbox
+            virt-provider-id: vbx
+          - virt-provider-name: vmware
+            virt-provider-id: vmw
+    
     # Reference reusable workflow to do the actual building and testing
-    uses: ./.github/workflows/sub-test.yml
+    uses: ./.github/workflows/sub-build-and-test.yml
+    
+    # Inherit secrets
+    secrets: inherit
     
     # Pass parameters to the sub-workflow
     with:
-      # Test run 
-      test-run-id: ${{matrix.test-run-id}}
+      # Virtualization provider name
+      virt-provider-name: ${{matrix.virt-provider-name}}
+      # Virtualization provider ID
+      virt-provider-id: ${{matrix.virt-provider-id}}
+      

@@ -20,7 +20,32 @@ clean: destroy_box remove_box
 
 # Test
 .PHONY: test
-test: test_run_default test_run_clockoffset
+
+### Begin VirtualBox-specific
+ifeq ($(MAKE_VIRTUALBOX),1)
+$(info *** Including VirtualBox testing rules ***)
+test: test_vbx
+
+# Test VirtualBox VM
+.PHONY: test_vbx
+test_vbx: export VM_PROVIDER=virtualbox
+test_vbx:
+	@cd $(TEST_DIR) && $(MAKE) test_run_default test_run_clockoffset
+endif
+### End VirtualBox-specific
+
+### Begin VMware-specific
+ifeq ($(MAKE_VMWARE),1)
+$(info *** Including VMware testing rules ***)
+test: test_vmw
+
+# Test VMware VM
+.PHONY: test_vmw
+test_vmw: export VM_PROVIDER=vmware
+test_vmw:
+	@cd $(TEST_DIR) && $(MAKE) test_run_default test_run_clockoffset
+endif
+### End VMware-specific
 
 # Default test run
 .PHONY: test_run_default
@@ -29,7 +54,7 @@ test_run_default:
 
 # Test run with clock offset
 .PHONY: test_run_clockoffset
-test_run_clockoffset: export VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/Vagrantfile.clockoffset.erb
+test_run_clockoffset: export VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb
 test_run_clockoffset:
 	@cd $(TEST_DIR) && $(MAKE) test_run
 
@@ -54,7 +79,7 @@ test_run_finish: shutdown_box destroy_box
 # Install Vagrant box
 .PHONY: install_box
 install_box:
-	@bash $(TEST_DIR)/manage/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(VM_NAME).box
+	@bash $(TEST_DIR)/manage/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(VM_PROVIDER)/$(VM_NAME).box
 
 # Initialize Vagrant box instance
 .PHONY: init_box

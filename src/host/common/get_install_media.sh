@@ -12,15 +12,33 @@ failure() {
 }
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
-# Include common stuff
-source $SCRIPT_DIR/common.sh
-
 # Display usage
 display_usage() {
   echo -e "Usage: $0 SOURCE_URL DEST_FILE CHECKSUM_SHA1\n"
   echo "Download install media from SOURCE_URL and save it to local file DEST_FILE."
   echo "Check file integrity using given SHA1 checksum CHECKSUM_SHA1."
   echo -e "Don't download file if it already exists and checksum matches.\n"
+}
+
+
+# Verify file checksum
+verify_checksum() {
+  local CHECK_FILE=$1
+  local CHECKSUM=$2
+
+  echo "Verifying checksum for $CHECK_FILE"
+  local CHECKSUM_FILE=$(mktemp)
+  echo "$CHECKSUM  $CHECK_FILE" > $CHECKSUM_FILE
+  shasum -c $CHECKSUM_FILE
+  local SHASUM_EXITCODE=$?
+  rm -f $CHECKSUM_FILE
+  if [ $SHASUM_EXITCODE -eq 0 ] ; then
+    echo "Checksum OK"
+    return 0
+  else 
+    echo "Checksum MISMATCH for \"$CHECK_FILE\""
+    return 1
+  fi
 }
 
 

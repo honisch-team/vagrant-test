@@ -86,8 +86,8 @@ netsh advfirewall firewall set rule group="remote desktop" new enable=Yes || got
 
 rem Disable password expiration
 echo.
-echo *** Disable password expiration for user %USERNAME%
-wmic USERACCOUNT WHERE Name='%USERNAME%' SET PasswordExpires=FALSE || goto
+echo *** Disable password expiration
+net accounts /MAXPWAGE:UNLIMITED || goto error
 
 rem Disable automatic Windows activation
 echo.
@@ -261,8 +261,10 @@ rem Cleanup windows temp dir
 echo.
 echo *** Cleanup %WINDIR%\Temp
 for /D %%I in (%WINDIR%\Temp\*.*) do (
-  echo Removing dir %%I...
-  rmdir /q /s %%I
+  if /I not "%%I"=="%WINDIR%\Temp\exec_cmd" (
+    echo Removing dir %%I...
+    rmdir /q /s %%I
+  )
 )
 del /Q /F %WINDIR%\Temp\*.* >nul 2>&1
 

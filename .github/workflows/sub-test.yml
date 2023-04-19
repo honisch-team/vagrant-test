@@ -3,16 +3,24 @@
 ############################################################
 name: Sub-Workflow Test
 
-on: 
+on:
   workflow_call:
     inputs:
       # Test run ID
       test-run-id:
         required: true
         type: string
- 
+      # Virtualization provider name: vmware or virtualbox
+      virt-provider-name:
+        required: true
+        type: string
+      # Virtualization provider id: vmw or vbx
+      virt-provider-id:
+        required: true
+        type: string
+
 jobs:
-  
+
   # Test Vagrant box
   test:
     runs-on: macos-12
@@ -20,7 +28,7 @@ jobs:
       # Check out
       - name: Checkout
         uses: actions/checkout@v3
-        
+
       # Upgrade Mac OS tools
       - name: Upgrade Mac OS tools
         run: |
@@ -30,13 +38,33 @@ jobs:
           brew install gnu-getopt
           echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
 
+      # Setup VMware Fusion
+      - name: Setup VMware Fusion
+        if: inputs.virt-provider-name == 'vmware'
+        run: |
+          brew install --cask vmware-fusion
+          #bash ./build/github_build_helper.sh configure-vmware-fusion --serial-no "${{secrets.VMWARE_FUSION_SERIAL}}"
+          bash ./build/github_build_helper.sh configure-vmware-fusion
+          brew install --cask vagrant-vmware-utility
+          vagrant plugin install vagrant-vmware-desktop
+
       # Download Dist artifact
       - name: Download Dist artifact
         uses: actions/download-artifact@v3
         with:
-          name: Dist
-          path: ./dist
+          name: Dist_${{inputs.virt-provider-id}}
+          path: ./dist/${{inputs.virt-provider-name}}
 
       # Test Vagrant box
       - name: Test Vagrant box
-        run: make -f ./test/Makefile test_run_${{inputs.test-run-id}}
+        run: make -f ./test/Makefile test_run_${{inputs.test-run-id}} VM_PROVIDER=${{inputs.virt-provider-name}}
+
+      # Debug
+      - name: Upload logs on error
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Debug_${{inputs.virt-provider-id}}
+          path: /Application Support/vagrant-vmware-utility/service.log
+          retention-days: 5
+

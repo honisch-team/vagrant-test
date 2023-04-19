@@ -13,7 +13,7 @@ failure() {
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
 # Include common stuff
-source $SCRIPT_DIR/common.sh
+source $SCRIPT_DIR/common_vbx.sh
 
 # Display usage
 display_usage() {
@@ -43,23 +43,23 @@ VM_NAME=$1
 
 
 echo "**************************************"
-echo "*** Removing VM $VM_NAME"
+echo "*** Removing VM \"$VM_NAME\""
 echo "**************************************"
 
 # Get VM info
 declare -A VM_INFO
 EXIT_CODE=0
 getVmInfo VM_INFO $VM_NAME || exit 1
-echo "Checking whether VM $VM_NAME is running..."
+echo "Checking whether VM is running..."
 
 # If VM is running => power off
 if [ "${VM_INFO[VMState]}" == "running" ] ; then
-  echo "VM $VM_NAME is running, stopping..."
+  echo "VM is running, stopping..."
   VBoxManage controlvm $VM_NAME poweroff
   sleep 5
-  echo "VM $VM_NAME is stopped"
+  echo "VM is stopped"
 else
-  echo -e "VM $VM_NAME not running"
+  echo -e "VM not running"
 fi
 
 echo "Unregistering VM..."
@@ -69,8 +69,8 @@ VBoxManage unregistervm --delete "$VM_NAME"
 VM_CFG_FILE=${VM_INFO[CfgFile]}
 if [ -f $VM_CFG_FILE ] ; then
   $VM_DIR=$(dirname $VM_CFG_FILE)
-  echo "Removing VM files from $VM_DIR"
-  rm -rf $VM_DIR
+  echo "Removing VM files from \"$VM_DIR\""
+  rm -rf $VM_DIR || true
 fi
-echo "VM $VM_NAME was deleted"
+echo "Done removing VM \"$VM_NAME\""
 

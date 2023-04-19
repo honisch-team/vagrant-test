@@ -1,0 +1,99 @@
+############################################################
+# Reusable workflow for building and testing using given virtualization provider
+############################################################
+name: Sub-Workflow Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      # Virtualization provider name: vmware or virtualbox
+      virt-provider-name:
+        required: true
+        type: string
+      # Virtualization provider id: vmw or vbx
+      virt-provider-id:
+        required: true
+        type: string
+
+jobs:
+
+  # Build Vagrant box
+  build:
+    runs-on: macos-12
+    steps:
+      # Check out
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Upgrade Mac OS tools
+      - name: Upgrade Mac OS tools
+        run: |
+          brew install bash
+          brew install gnu-sed
+          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+          brew install gnu-getopt
+          echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
+
+      # Setup VMware Fusion
+      - name: Setup VMware Fusion
+        if: inputs.virt-provider-name == 'vmware'
+        run: |
+          brew install --cask vmware-fusion
+          #bash ./build/github_build_helper.sh configure-vmware-fusion --serial-no "${{secrets.VMWARE_FUSION_SERIAL}}"
+          bash ./build/github_build_helper.sh configure-vmware-fusion
+
+      # Set Github environment variables
+      - name: Set Github environment variables
+        run: make -f ./build/Makefile set_github_vars
+
+      # Get cached install media
+      - name: Retrieve install media from cache
+        uses: actions/cache/restore@v3
+        with:
+          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
+          path: ./install-media
+          fail-on-cache-miss: true
+
+      # Create VM and install OS
+      - name: Create VM and install OS
+        run: make -f ./src/Makefile create_vm_${{inputs.virt-provider-id}} install_os_vm_${{inputs.virt-provider-id}}
+
+      # Update VM
+      - name: Update VM
+        timeout-minutes: 720
+        #run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}} UPDATE_VM_OPTS
+        run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
+
+      # Package box
+      - name: Build Vagrant box
+        run: make -f ./src/Makefile package_${{inputs.virt-provider-id}}
+
+      # Upload Dist artifact
+      - name: Upload Dist artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Dist_${{inputs.virt-provider-id}}
+          path: ./dist/${{inputs.virt-provider-name}}
+          retention-days: 5
+
+
+  # Test Vagrant box
+  test:
+    # Run after build
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        test-run-id: [default, clockoffset]
+
+    # Reference reusable workflow to do the actual building and testing
+    uses: ./.github/workflows/sub-test.yml
+
+    # Pass parameters to the sub-workflow
+    with:
+      # Test run
+      test-run-id: ${{matrix.test-run-id}}
+      # Virtualization provider name
+      virt-provider-name: ${{inputs.virt-provider-name}}
+      # Virtualization provider ID
+      virt-provider-id: ${{inputs.virt-provider-id}}

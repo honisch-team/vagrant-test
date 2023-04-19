@@ -46,7 +46,7 @@ echo "**************************************"
 echo "*** Shutting down Vagrant box in \"$VG_TEST_DIR\""
 echo "**************************************"
 
-# Start box
+# Shutting down box
 (cd $VG_TEST_DIR && vagrant halt)
 
 echo "Done"

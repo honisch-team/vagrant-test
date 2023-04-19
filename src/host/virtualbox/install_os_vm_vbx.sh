@@ -13,11 +13,11 @@ failure() {
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
 # Include common stuff
-source $SCRIPT_DIR/common.sh
+source $SCRIPT_DIR/common_vbx.sh
 
 # Display usage
-display_usage() { 
-  echo -e "Usage: $0 NAME INSTALL_MEDIA HOSTNAME USER PASSWORD\n" 
+display_usage() {
+  echo -e "Usage: $0 NAME INSTALL_MEDIA HOSTNAME USER PASSWORD\n"
   echo "Install operating system in virtual machine"
   echo "NAME:          Name of VM"
   echo "INSTALL_MEDIA: Path to install media"
@@ -49,17 +49,18 @@ VM_HOSTNAME=$3
 VM_USER=$4
 VM_PASSWORD=$5
 
-
 echo "**************************************"
-echo "*** Installing operating system in VM $VM_NAME"
+echo "*** Installing operating system in VM \"$VM_NAME\""
 echo "**************************************"
-echo "Install media $VM_INSTALL_MEDIA" 
+echo "Install media: $VM_INSTALL_MEDIA"
+echo "Hostname: $VM_HOSTNAME"
+echo "User: $VM_USER"
 echo ""
 
 # Start unattended install
 echo "Starting unattended install..."
 VBoxManage unattended install $VM_NAME --iso=$VM_INSTALL_MEDIA --user=$VM_USER --password=$VM_PASSWORD --install-additions --country=US \
-  --hostname=$VM_HOSTNAME \
+  --hostname=$VM_HOSTNAME.local \
   --post-install-command="VBoxControl guestproperty set installation_finished y \
   & reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f \
   & shutdown /a \
@@ -73,17 +74,18 @@ echo "Installation has finished"
 VBoxManage guestproperty delete $VM_NAME installation_finished
 
 # Wait for VM to shut down
-waitUntilVmStopped $VM_NAME 
+echo "Wait until VM stopped"
+waitUntilVmStopped $VM_NAME
 
 # Modify some VM settings
 echo "Modifying VM settings..."
+# Remove install media
+VBoxManage storageattach $VM_NAME --storagectl "SATA" --port 1 --device 0 --medium none
 # Remove Guest Additions ISO
 VBoxManage storageattach $VM_NAME --storagectl "SATA" --port 2 --device 0 --medium none
-# Remove virtual DVD drive
-VBoxManage storageattach $VM_NAME --storagectl "SATA" --port 1 --device 0 --medium none
-# Remove floppy 
+# Remove floppy
 VBoxManage storagectl $VM_NAME --name "Floppy" --remove
 # Fix boot order
 VBoxManage modifyvm $VM_NAME --boot1 disk --boot2 none --boot3 none --boot4 none
 
-echo "Done"
+echo "Done installing operating system in VM \"$VM_NAME\""

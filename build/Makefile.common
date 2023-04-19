@@ -18,6 +18,25 @@ VM_BASE_DIR := $(abspath $(ROOT_DIR)/vm-base)
 # Dir for Vagrant test environment
 VG_TEST_DIR := $(ROOT_DIR)/vagrant-test-env
 
+# Check whether VirtualBox is installed
+ifndef MAKE_VIRTUALBOX
+ifneq ($(shell which vboxmanage),)
+export MAKE_VIRTUALBOX=1
+else
+export MAKE_VIRTUALBOX=
+endif
+endif
+
+# Check whether VMware is installed
+ifndef MAKE_VMWARE
+ifneq ($(shell which vmrun),)
+export MAKE_VMWARE=1
+$(info *** VMware detected ***)
+else
+export MAKE_VMWARE=
+endif
+endif
+
 # Include config settings
 include $(ROOT_DIR)/build/Makefile.config
 

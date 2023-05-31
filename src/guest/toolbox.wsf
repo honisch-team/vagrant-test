@@ -96,6 +96,13 @@ function regWriteValue(regPath, regValueName, regValue, regValueType) {
 }
 
 
+// Delete registry key
+function regDeleteKey(regPath) {
+  var wsh = getWshShell();
+  wsh.RegDelete(regPath + "\\");
+}
+
+
 // Set netconnection profle
 function setNetConnectionProfile(location) {
 
@@ -126,6 +133,23 @@ function setNetConnectionProfile(location) {
     } else {
       throw new Error("Invalid location: " + locName);
     }
+  }
+}
+
+
+// Clear netconnection profles
+function clearNetConnectionProfiles() {
+
+  log("Clearing network connection profiles");
+
+  // Iterate profiles
+  var regProfilesPath = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkList\\Profiles";
+  var profilesKeys = regGetKeys(regProfilesPath);
+  for(var i = 0; i < profilesKeys.length; i++) {
+    var regProfilePath = regProfilesPath + "\\" +  profilesKeys[i];
+    var profileName = regReadValue(regProfilePath, "ProfileName");
+    log("  Removing profile: " + profileName);
+    regDeleteKey(regProfilePath);
   }
 }
 
@@ -266,6 +290,8 @@ function installWindowsUpdates(maxUpdates) {
 function execCommand(cmd, params) {
   if (cmd == "setnetconnectionprofile") {
     return setNetConnectionProfile(params["location"]);
+  } else if (cmd == "clearnetconnectionprofiles") {
+    return clearNetConnectionProfiles();
   } else if (cmd == "installwindowsupdates") {
     return installWindowsUpdates(params["maxupdates"]);
   } else {

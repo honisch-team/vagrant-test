@@ -53,6 +53,8 @@ call winrm set winrm/config @{MaxTimeoutms="1800000"}
 call winrm set winrm/config/service @{AllowUnencrypted="true"}
 call winrm set winrm/config/service/auth @{Basic="true"}
 sc config WinRM start= auto
+rem Modify firewall to enable WinRM on private and public networks
+netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" profile=private new profile="private,public"
 
 rem Set Powershell execution policy
 echo.
@@ -285,6 +287,11 @@ if defined NO_ZERODISK (
 echo *** Zeroing free diskspace
 "%MYDIR%\sdelete.exe" -z c: /accepteula || goto error
 :after_zero_free_diskspace
+
+rem Clear network connection profile list
+echo.
+echo ** Clearing network connection profiles
+CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:clearnetconnectionprofiles || goto error
 
 rem Add page file again on next startup
 echo.

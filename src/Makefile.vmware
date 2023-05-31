@@ -45,7 +45,7 @@ update_vm_vmw:
 # Package VMware VM
 .PHONY: package_vmw
 package_vmw:
-	@bash $(SRC_DIR)/package/vmware/package_vm_vmw.sh $(VM_NAME) "$(VM_BASE_DIR)/vmware" $(SRC_DIR)/package/common/Vagrantfile.pkg "$(SRC_DIR)/package/vmware/work" $(DIST_DIR)/vmware/$(VM_NAME).box
+	@bash $(SRC_DIR)/package/vmware/package_vm_vmw.sh $(VM_NAME) "$(VM_BASE_DIR)/vmware" $(SRC_DIR)/package/vmware/Vagrantfile.pkg "$(SRC_DIR)/package/vmware/work" $(DIST_DIR)/vmware/$(VM_NAME).box
 
 # Remove VMware VM
 .PHONY: PHONY

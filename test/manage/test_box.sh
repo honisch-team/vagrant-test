@@ -35,6 +35,16 @@ testVersionStr() {
 }
 
 
+# Test date and time
+testDateTime() {
+  # Get windows version from inside box
+  echo "Executing test: DateTime"
+  echo " Executing test command..."
+  STR=$(vagrant winrm --shell cmd --command "date /T" | tr -d "\r")
+  echo "  Result  : $STR"
+}
+
+
 # Display usage
 display_usage() {
   echo -e "Usage: $0 TEST_DIR\n"
@@ -72,6 +82,9 @@ cd $VG_TEST_DIR
 
 # Test version string
 testVersionStr || TESTS_FAILED=1
+
+# Test date and time
+testDateTime || TESTS_FAILED=1
 
 # Check for test result
 if [ $TESTS_FAILED -ne 0 ] ; then

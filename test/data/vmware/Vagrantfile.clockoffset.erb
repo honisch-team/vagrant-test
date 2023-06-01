@@ -1,0 +1,17 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "<%= box_name %>"
+  <% if box_version -%>
+  config.vm.box_version = "<%= box_version %>"
+  <% end -%>
+  <% if box_url -%>
+  config.vm.box_url = "<%= box_url %>"
+  <% end -%>
+  
+  # Modify VM 
+  config.vm.provider "vmware_desktop" do |v|
+    # Clock offset +1 year
+    v.vmx['rtc.diffFromUTC'] = '31536000'
+    # Disable time sync between host and guest
+    v.vmx['tools.syncTime'] = 'TRUE'
+  end
+end

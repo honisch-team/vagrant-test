@@ -61,7 +61,7 @@ jobs:
       # Update VM
       - name: Update VM
         timeout-minutes: 720
-        run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}} UPDATE_VM_OPTS
+        run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}}
         #run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
 
       # Package box

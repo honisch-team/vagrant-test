@@ -263,7 +263,13 @@ function installWindowsUpdates(maxUpdates) {
   log("  Installing updates...");
   var installer = updateSession.CreateUpdateInstaller();
   installer.Updates = updatesToInstall;
-  installationResult = installer.Install();
+  try {
+    installationResult = installer.Install();
+  } catch(e) {
+    log("  Error while installing Windows updates: " + e.number + " " + e.description);
+    log("  Rebooting and trying again...");
+    return 2;
+  }
 
   // Installation results
   log("  Installation Result: " + installationResult.ResultCode.toString());

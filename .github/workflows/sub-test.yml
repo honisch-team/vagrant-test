@@ -58,13 +58,3 @@ jobs:
       # Test Vagrant box
       - name: Test Vagrant box
         run: make -f ./test/Makefile test_run_${{inputs.test-run-id}} VM_PROVIDER=${{inputs.virt-provider-name}}
-
-      # Debug
-      - name: Upload logs on error
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: Debug_${{inputs.virt-provider-id}}
-          path: /Application Support/vagrant-vmware-utility/service.log
-          retention-days: 5
-

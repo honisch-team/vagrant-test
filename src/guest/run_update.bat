@@ -38,6 +38,12 @@ if defined UPDATE_NEXT_ENTRY_POINT (
   goto %UPDATE_NEXT_ENTRY_POINT%
 )
 
+rem Disable automatic Windows Updates
+echo.
+echo *** Disable Windows Updates
+net stop wuauserv >nul 2>&1
+reg add "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate" /v NoAutoUpdate /t REG_DWORD /d 1 /f || goto error
+
 rem Set network connection profile to private
 echo.
 echo *** Set network connection profile to private
@@ -224,12 +230,6 @@ for /D %%I in (%WINDIR%\SoftwareDistribution\Download\*.*) do (
 )
 del /Q /F %WINDIR%\SoftwareDistribution\Download\*.* >nul 2>&1
 :after_cleanup_windows_update_downloads
-
-rem Disable Windows Updates
-echo.
-echo *** Disable Windows Updates
-net stop wuauserv >nul 2>&1
-reg add "HKLM\Software\Policies\Microsoft\Windows\WindowsUpdate" /v NoAutoUpdate /t REG_DWORD /d 1 /f || goto error
 
 rem Remove page file
 echo.

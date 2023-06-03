@@ -41,7 +41,7 @@ waitUntilVmStopped() {
   local MAX_WAIT_LOOPS=60
   while [ "$VM_STATE" != "stopped" ] ; do
     # Abort if max wait loops exceeded
-    let MAX_WAIT_LOOPS--
+    ((MAX_WAIT_LOOPS--))
     if [ $MAX_WAIT_LOOPS -eq 0 ] ; then
       echo "Exceeded max wait loops"
       return 1
@@ -71,7 +71,7 @@ waitForGuestVar() {
       echo "$VAR_NAME: $VAR_VALUE"
       return 0
     fi
-    let MAX_WAIT_LOOPS--
+    ((MAX_WAIT_LOOPS--))
     if [ $MAX_WAIT_LOOPS -eq 0 ] ; then
       echo "Exceeded max wait loops"
       return 1
@@ -121,7 +121,7 @@ waitUntilVmStartupComplete() {
   local MAX_WAIT_LOOPS=60
   while [ "$VM_TOOLS_STATE" != "running" ] ; do
     # Abort if max wait loops exceeded
-    let MAX_WAIT_LOOPS--
+    ((MAX_WAIT_LOOPS--))
     if [ $MAX_WAIT_LOOPS -eq 0 ] ; then
       echo "Exceeded max wait loops"
       return 1

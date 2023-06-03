@@ -186,7 +186,7 @@ MAX_UPDATE_LOOPS=20
 while [ $UPDATE_SCRIPT_FINISHED -eq 0 ]
 do
   # Abort after maximum of update loops has been reached
-  let MAX_UPDATE_LOOPS--
+  ((MAX_UPDATE_LOOPS--))
   if [ $MAX_UPDATE_LOOPS -eq 0 ] ; then
     echo "Exceeded max update loops"
     exit 1

@@ -4,14 +4,52 @@
 getVmInfo() {
   local -n arr=$1
   local VM_NAME=$2
+  local VM_SHOULD_EXIST=${3:-0}
   echo "Retrieving VM info for \"$VM_NAME\"..."
-  local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
-  if [ "$TMP_STR" == "" ] ; then
+  #local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
+  local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME)
+  local VBOXMANAGE_ERROR_CODE=$?
+  local TMP_STR_2=$(echo "$TMP_STR" | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
+  if [ "$TMP_STR_2" == "" ] ; then
     echo "VM not found"
+
+    if [ $VM_SHOULD_EXIST -ne 0 ] ;  then
+      echo "Debug VBoxManage exit code: $VBOXMANAGE_ERROR_CODE"
+      echo "Debug TMP_STR begin"
+      echo "$TMP_STR"
+      echo "Debug TMP_STR end"
+    fi
     return 1
   fi
-  eval "$TMP_STR" 2>/dev/null || true
+  eval "$TMP_STR_2" 2>/dev/null || true
 }
+
+
+# Get VM info
+#getVmInfo() {
+#  local -n arr=$1
+#  local VM_NAME=$2
+#
+#  echo "Retrieving VM info for \"$VM_NAME\"..."
+#  local MAX_RETRY_LOOPS=10
+#  local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
+#  while [ "$TMP_STR" == "" ] ; do
+#    echo "VM not found"
+#
+#    # Check for max retries exceeded
+#    if [ $MAX_RETRY_LOOPS -eq 0 ] ; then
+#      echo "Exceeded max retries => fail with error"
+#      return 1
+#    fi
+#
+#    # Sleep and retry
+#    sleep 2
+#    ((MAX_RETRY_LOOPS--))
+#    echo "Retrieving VM info for \"$VM_NAME\" ($MAX_RETRY_LOOPS)..."
+#    TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
+#  done
+#  eval "$TMP_STR" 2>/dev/null || true
+#}
 
 
 # Wait for VM shutdown
@@ -28,17 +66,16 @@ waitUntilVmStopped() {
   fi
 
   local MAX_WAIT_LOOPS=60
-  while [ "${VM_INFO[VMState]}" != "poweroff" ]
-  do
+  while [ "${VM_INFO[VMState]}" != "poweroff" ] ; do
     echo "Waiting for VM \"$VM_NAME\" to stop ($MAX_WAIT_LOOPS)..."
     sleep 10
     EXIT_CODE=0
-    getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
+    getVmInfo VM_INFO $VM_NAME 1 || EXIT_CODE=$?
     if [ $EXIT_CODE -ne 0 ] ; then
       # in case of error
       return 1
     fi
-    let MAX_WAIT_LOOPS--
+    ((MAX_WAIT_LOOPS--))
     if [ $MAX_WAIT_LOOPS -eq 0 ] ; then
       echo "Exceeded max wait loops"
       return 1

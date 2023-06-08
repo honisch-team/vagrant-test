@@ -51,16 +51,46 @@ display_usage() {
   echo "Test Vagrant box"
   echo "TEST_DIR:  Vagrant test environment dir"
   echo ""
+  echo "Options:"
+  echo "  -h, --help          display this help and exit"
+  echo "  --clockoffset       Clock offset mode"
+  echo ""
 }
 
 
 ### Main code starts here
 
-# Check for -h or --help
-if [[ ($@ == "--help") || $@ == "-h" ]] ; then
-  display_usage
-  exit 0
-fi
+# Parse options
+EXIT_CODE=0
+VALID_ARGS=$(getopt -o h --long help,clockoffset --name "$0" -- "$@") || EXIT_CODE=$?
+if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+eval set -- ${VALID_ARGS}
+
+# Set initial values
+OPT_CLOCKOFFSET=0
+
+# extract options and arguments into variables
+while true ; do
+  case "$1" in
+    -h | --help)
+      display_usage
+      exit 0
+      ;;
+    --clockoffset)
+      OPT_CLOCKOFFSET=1
+      shift
+      ;;
+    --) # end of arguments
+      shift
+      break
+      ;;
+    *) # error
+      >&2 echo "Unsupported option: $1"
+      display_usage
+      exit 1
+      ;;
+  esac
+done
 
 # Check for correct number of arguments
 if [ $# -ne 1 ] ; then

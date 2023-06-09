@@ -35,13 +35,25 @@ testVersionStr() {
 }
 
 
-# Test date and time
-testDateTime() {
-  # Get windows version from inside box
-  echo "Executing test: DateTime"
+# Test time difference
+testTimeDiff() {
+  local OPT_CLOCKOFFSET=$1
+  # Compare host time with guest time
+  echo "Executing test: TimeDiff"
+  local EXPECTED_OFFSET_SECS=0
+  if [ $OPT_CLOCKOFFSET -ne 0 ] ; then
+    EXPECTED_OFFSET_SECS=31536000
+  fi
   echo " Executing test command..."
-  STR=$(vagrant winrm --shell cmd --command "date /T" | tr -d "\r")
-  echo "  Result  : $STR"
+  local EXIT_CODE=0
+  vagrant winrm --shell cmd --command "cscript //NoLogo C:\\vagrant\\test_time.wsf /hostEpochSecs:$EPOCHSECONDS /maxDiffSecs:60 /expectedOffsetSecs:$EXPECTED_OFFSET_SECS" || EXIT_CODE=$?
+  if [ $EXIT_CODE -eq 0 ] ; then
+    echo "  => Success"
+    return 0
+  else
+    echo "  => Failure"
+    return 1
+  fi
 }
 
 
@@ -104,6 +116,10 @@ VG_TEST_DIR=$1
 echo "**************************************"
 echo "*** Testing Vagrant box in \"$VG_TEST_DIR\""
 echo "**************************************"
+if [ $OPT_CLOCKOFFSET -ne 0 ] ; then
+  echo "Expect guest clock offset"
+fi
+echo ""
 
 # Indicate test success / failure
 TESTS_FAILED=0
@@ -113,8 +129,8 @@ cd $VG_TEST_DIR
 # Test version string
 testVersionStr || TESTS_FAILED=1
 
-# Test date and time
-testDateTime || TESTS_FAILED=1
+# Test time difference
+testTimeDiff $OPT_CLOCKOFFSET || TESTS_FAILED=1
 
 # Check for test result
 if [ $TESTS_FAILED -ne 0 ] ; then

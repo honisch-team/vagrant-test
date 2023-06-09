@@ -1,0 +1,116 @@
+<job>
+<script language="JScript">
+
+
+// Log message
+function log(msg) {
+  WScript.stdout.writeLine(msg);
+}
+
+
+// Add leading zeroes
+function addLeadingZeroes(str, n) {
+  while (str.length < n) {
+    str = "0000000000".substr(0, n - str.length) + str;
+  }
+  return str;
+}
+
+
+// Get timestamp as string
+function getTimestampString(d) {
+  return d.getFullYear().toString() + "."
+    + addLeadingZeroes((d.getMonth() + 1).toString(), 2) + "."
+    + addLeadingZeroes(d.getDate().toString(), 2) + "_"
+    + addLeadingZeroes(d.getHours().toString(), 2) + ":"
+    + addLeadingZeroes(d.getMinutes().toString(), 2) + ":"
+    + addLeadingZeroes(d.getSeconds().toString(), 2) + "."
+    + addLeadingZeroes(d.getMilliseconds().toString(), 3);
+}
+
+
+// Get UTC timestamp as string
+function getUtcTimestampString(d) {
+  return d.getUTCFullYear().toString() + "."
+    + addLeadingZeroes((d.getUTCMonth() + 1).toString(), 2) + "."
+    + addLeadingZeroes(d.getUTCDate().toString(), 2) + "_"
+    + addLeadingZeroes(d.getUTCHours().toString(), 2) + ":"
+    + addLeadingZeroes(d.getUTCMinutes().toString(), 2) + ":"
+    + addLeadingZeroes(d.getUTCSeconds().toString(), 2) + "."
+    + addLeadingZeroes(d.getUTCMilliseconds().toString(), 3);
+}
+
+
+// Test time difference between host time and guest time
+function testTimeDiffHostVsGuest(hostEpochSecs, expectedOffsetSecs, maxDiffSecs) {
+  log("Testing time difference host time vs. guest time");
+  log("  Host epoch time in seconds:  " + hostEpochSecs);
+  log("  Expected offset in seconds:  " + expectedOffsetSecs);
+  log("  Max allowed diff in seconds: " + maxDiffSecs);
+
+  // Determine guest epoch time
+  var dateGuest = new Date();
+  var guestEpochSecs = Math.round(dateGuest.getTime() / 1000);
+  log("  Guest epoch time in seconds: " + guestEpochSecs);
+  
+  // Host time
+  var dateHost = new Date();
+  dateHost.setTime(hostEpochSecs * 1000);
+  log("  Host time: " + getTimestampString(dateHost)); 
+  log("  Host time UTC: " + getUtcTimestampString(dateHost)); 
+  
+  // Guest time
+  log("  Guest time: " + getTimestampString(dateGuest)); 
+  log("  Guest time UTC: " + getUtcTimestampString(dateGuest)); 
+  
+  // Determine difference
+  var diffSecs = Math.abs(guestEpochSecs - hostEpochSecs - expectedOffsetSecs);
+  log("  Difference in seconds: " + diffSecs);
+  if (diffSecs > maxDiffSecs) {
+    throw new Error("Test failed: Difference between host time and guest time to big");
+  }
+  log("  Test passed");
+}
+
+
+// Main function
+function main() {
+  var i, m, s, hostEpochSecs = null, maxDiffSecs = 0, expectedOffsetSecs = 0;
+
+  for (i = 0; i < WScript.arguments.length; i++) {
+    s = WScript.arguments(i).toString();
+
+    m = s.match(/^\/hostepochsecs:(.*)$/i);
+    if (m) {
+      hostEpochSecs = parseInt(m[1], 10);
+      continue;
+    }
+    
+    m = s.match(/^\/maxdiffsecs:(.*)$/i);
+    if (m) {
+      maxDiffSecs = parseInt(m[1], 10);
+      continue;
+    }
+    
+    m = s.match(/^\/expectedoffsetsecs:(.*)$/i);
+    if (m) {
+      expectedOffsetSecs = parseInt(m[1], 10);
+      continue;
+    }
+    
+  }
+
+  // Require hostEpochSecs to be specified
+  if (hostEpochSecs == null) {
+    throw new Error("Please specify /hostEpochSecs:{EpochTime}");
+  }
+  
+  // Run test
+  testTimeDiffHostVsGuest(hostEpochSecs, expectedOffsetSecs, maxDiffSecs);
+}
+
+main();
+
+
+</script>
+</job>

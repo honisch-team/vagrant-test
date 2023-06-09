@@ -4,7 +4,7 @@ set MYDIR=%~dp0
 set MYDIR=%MYDIR:~0,-1%
 
 echo *****************************
-echo *** Updating VM
+echo *** Updating VM (%DATE% %TIME:~0,-3%)
 echo *****************************
 
 rem Set default values
@@ -101,6 +101,11 @@ rem Disable automatic Windows activation
 echo.
 echo *** Disable automatic Windows activation
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT \CurrentVersion\SoftwareProtectionPlatform\Activation" /v Manual /t REG_DWORD /d 1 /f || goto error
+
+rem Tell Windows that BIOS RTC is UTC
+echo.
+echo *** Tell Windows that BIOS RTC is UTC
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f || goto error
 
 rem Configure Windows Explorer
 echo.
@@ -303,7 +308,7 @@ rem Finished
 set EXIT_CODE=0
 echo.
 echo ************************************************************
-echo *** Finished updating VM
+echo *** Finished updating VM (%DATE% %TIME:~0,-3%)
 echo ************************************************************
 goto end
 
@@ -321,7 +326,7 @@ shutdown /a >nul 2>&1 & shutdown /s /f /t 10
 set EXIT_CODE=2
 echo.
 echo ************************************************************
-echo *** Shutting down, continue after restart (exit code: %EXIT_CODE%)
+echo *** Shutting down, continue after restart. Exit code: %EXIT_CODE% (%DATE% %TIME:~0,-3%)
 echo ************************************************************
 goto end
 
@@ -335,7 +340,7 @@ echo *** Continue with entry point on re-run: %UPDATE_NEXT_ENTRY_POINT%
 set EXIT_CODE=3
 echo.
 echo ************************************************************
-echo *** Exit script and re-run (exit code: %EXIT_CODE%)
+echo *** Exit script and re-run. Exit code: %EXIT_CODE% (%DATE% %TIME:~0,-3%)
 echo ************************************************************
 goto end
 
@@ -343,7 +348,7 @@ goto end
 set ERROR_OCCURRED=1
 set EXIT_CODE=1
 echo ************************************************************
-echo *** ERROR while updating VM (exit code: %EXIT_CODE%)
+echo *** ERROR while updating VM. Exit code: %EXIT_CODE% (%DATE% %TIME:~0,-3%)
 echo ************************************************************
 
 :end

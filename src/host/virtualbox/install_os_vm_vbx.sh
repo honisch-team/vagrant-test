@@ -60,7 +60,7 @@ echo ""
 # Start unattended install
 echo "Starting unattended install..."
 VBoxManage unattended install $VM_NAME --iso=$VM_INSTALL_MEDIA --user=$VM_USER --password=$VM_PASSWORD --install-additions --country=US \
-  --hostname=$VM_HOSTNAME.local \
+  --hostname=$VM_HOSTNAME.local --time-zone=UTC \
   --post-install-command="VBoxControl guestproperty set installation_finished y \
   & reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f \
   & shutdown /a \

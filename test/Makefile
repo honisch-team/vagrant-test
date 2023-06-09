@@ -10,6 +10,9 @@ VG_TEST_BOX_NAME := test-box
 # Test data dir
 TEST_DATA_DIR := $(TEST_DIR)/host/data
 
+# Test guest resources dir
+TEST_RES_DIR := $(TEST_DIR)/guest
+
 # Make all
 .PHONY: all
 all: test
@@ -54,8 +57,8 @@ test_run_default:
 
 # Test run with clock offset
 .PHONY: test_run_clockoffset
-test_run_clockoffset: VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb
-test_run_clockoffset: VG_TEST_BOX_RUN_PARAMS=--clockoffset
+test_run_clockoffset: export VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb
+test_run_clockoffset: export VG_TEST_BOX_RUN_PARAMS=--clockoffset
 test_run_clockoffset:
 	@cd $(TEST_DIR) && $(MAKE) test_run
 
@@ -84,7 +87,7 @@ install_box:
 # Initialize Vagrant box instance
 .PHONY: init_box
 init_box:
-	@bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_DIR) $(VG_TEST_BOX_INIT_PARAMS)
+	@bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_DIR) $(TEST_RES_DIR) $(VG_TEST_BOX_INIT_PARAMS)
 
 # Startup Vagrant box
 .PHONY: startup_box

@@ -106,36 +106,9 @@
       <CommandLine>cmd /c "F:\vmw_post_install_1.bat"</CommandLine>
       <Order>3</Order>
      </SynchronousCommand>
-     <!--<SynchronousCommand wcm:action="add">
-      <CommandLine>cmd /c copy a:\upgrader.exe %TEMP%\upgrader.exe</CommandLine>
-      <Order>2</Order>
-     </SynchronousCommand>
-     <SynchronousCommand wcm:action="add">
-      <CommandLine>cmd /c copy a:\unattend.cmd %TEMP%\unattend.cmd</CommandLine>
-      <Order>3</Order>
-     </SynchronousCommand>
-     <SynchronousCommand wcm:action="add">
-      <CommandLine>cmd /c copy a:\storePwd.exe %TEMP%\storePwd.exe</CommandLine>
-      <Order>4</Order>
-     </SynchronousCommand>
-     <SynchronousCommand wcm:action="add">
-      <CommandLine>cmd /c copy a:\storePwd.ini %TEMP%\storePwd.ini</CommandLine>
-      <Order>5</Order>
-     </SynchronousCommand>
-    <SynchronousCommand wcm:action="add">
-     <CommandLine>%TEMP%\unattend.cmd noInstallTools</CommandLine>
-     <Order>6</Order>
-    </SynchronousCommand>-->
-    <!--<SynchronousCommand wcm:action="add">
-     <CommandLine>powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c</CommandLine>
-     <Order>7</Order>
-    </SynchronousCommand>
-    <SynchronousCommand wcm:action="add">
-     <CommandLine>net accounts /MAXPWAGE:UNLIMITED</CommandLine>
-     <Order>8</Order></SynchronousCommand>-->
     </FirstLogonCommands>
 
-    <TimeZone>W. Europe Standard Time</TimeZone>
+    <TimeZone>UTC</TimeZone>
    </component>
 
   </settings>

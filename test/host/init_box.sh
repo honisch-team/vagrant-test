@@ -19,10 +19,11 @@ source $SCRIPT_DIR/common.sh
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTION] BOX_NAME BOX_FILE\n"
+  echo -e "Usage: $0 [OPTION] BOX_NAME TEST_DIR RES_DIR\n"
   echo "Install Vagrant box file"
   echo "BOX_NAME:  Name for Vagrant box"
-  echo "BOX_FILE:  Vagrant box file to test"
+  echo "TEST_DIR:  Vagrant test environment dir"
+  echo "RES_DIR:   Dir containing test resources to be copied to TEST_DIR"
   echo ""
   echo "Options:"
   echo "  -h, --help                display this help and exit"
@@ -45,7 +46,7 @@ OPT_VAGRANT_FILE=
 # extract options and arguments into variables
 while true ; do
   case "$1" in
-    -h | --help) 
+    -h | --help)
       display_usage
       exit 0
       ;;
@@ -66,7 +67,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 2 ] ; then
+if [ $# -ne 3 ] ; then
   display_usage
   exit 1
 fi
@@ -74,11 +75,13 @@ fi
 # Read params
 VG_BOX_NAME=$1
 VG_TEST_DIR=$2
+VG_RES_DIR=$3
 
 echo "**************************************"
 echo "*** Initialize Vagrant box \"$VG_BOX_NAME\""
 echo "**************************************"
-echo "Test env. dir: $VG_TEST_DIR"
+echo "Test environment dir: $VG_TEST_DIR"
+echo "Test resources dir: $VG_RES_DIR"
 if [ "$OPT_VAGRANT_FILE" != "" ] ; then
   echo "Vagrantfile template: $OPT_VAGRANT_FILE"
 fi
@@ -96,5 +99,9 @@ if [ "$OPT_VAGRANT_FILE" != "" ] ; then
 else
   (cd $VG_TEST_DIR && vagrant init --force -m $VG_BOX_NAME)
 fi
+
+# Copy test resources to vagrant dir
+echo "Copying test resouces from \"$VG_RES_DIR\" to test env. dir"
+cp "$VG_RES_DIR/"* "$VG_TEST_DIR"
 
 echo "Done"

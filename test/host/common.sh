@@ -14,10 +14,10 @@ isBoxInstalled() {
 }
 
 
-# Remove installed Vagrant box 
+# Remove installed Vagrant box
 removeBox() {
   local BOX_NAME=$1
-  
+
   # Check if box is installed
   isBoxInstalled $BOX_NAME || return 1
 
@@ -31,7 +31,7 @@ removeBox() {
 # Destroy Vagrant box instance
 destroyBox() {
   local TEST_DIR=$1
-  
+
   echo "Checking for test environment \"$TEST_DIR\"..."
   # Check for environment dir
   if [ ! -d $TEST_DIR ] ; then
@@ -44,11 +44,49 @@ destroyBox() {
     echo "Test environment not valid"
     return 1
   fi
-  
+
   # Destroy box instances
   echo "Destroying box instance..."
   (cd $TEST_DIR && vagrant destroy --force)
-  
+
   # Remove files
   (shopt -s dotglob && rm -rf $TEST_DIR/*)
 }
+
+
+# Start box
+start_box() (
+  set -euo pipefail
+  VG_DIR=$1
+  VG_UP_PARAMS=${2:-}
+
+  # Change to vagrant dir
+  cd $VG_DIR
+
+  # Launch box, try multiple times due to issue with vmware_desktop provider
+  MAX_RETRY_LOOPS=10
+  echo "****************"
+  echo "*** Starting vagrant box"
+  echo "****************"
+  EXIT_CODE=0
+  vagrant up $VG_UP_PARAMS || EXIT_CODE=$?
+
+  # Retry if not successful
+  while [ $EXIT_CODE -ne 0 ] ; do
+    # Check for max retries exceeded
+    if [ $MAX_RETRY_LOOPS -eq 0 ] ; then
+      echo "Exceeded max retries"
+      return 1
+    fi
+
+    # Sleep and retry
+    sleep 10
+    ((MAX_RETRY_LOOPS--))
+    echo "****************"
+    echo "*** Retry starting vagrant box ($MAX_RETRY_LOOPS)"
+    echo "****************"
+    EXIT_CODE=0
+    vagrant up || EXIT_CODE=$?
+  done
+  return 0
+)

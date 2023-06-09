@@ -28,6 +28,8 @@ display_usage() {
   echo "Options:"
   echo "  -h, --help                display this help and exit"
   echo "  -v, --vagrantfile=FILE    initialize box with given Vagrantfile template"
+  echo "  -t, --no-win-time-sync    initialize box with given Vagrantfile template"
+
   echo ""
 }
 
@@ -36,12 +38,13 @@ display_usage() {
 
 # Parse options
 EXIT_CODE=0
-VALID_ARGS=$(getopt -o hv: --long help,vagrantfile: --name "$0" -- "$@") || EXIT_CODE=$?
+VALID_ARGS=$(getopt -o hv:t --long help,vagrantfile:,no-win-time-sync --name "$0" -- "$@") || EXIT_CODE=$?
 if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
 eval set -- ${VALID_ARGS}
 
 # Set initial values
 OPT_VAGRANT_FILE=
+OPT_NO_WIN_TIME_SYNC=0
 
 # extract options and arguments into variables
 while true ; do
@@ -53,6 +56,10 @@ while true ; do
     -v | --vagrantfile)
       OPT_VAGRANT_FILE="$2"
       shift 2
+      ;;
+    -t | --no-win-time-sync)
+      OPT_NO_WIN_TIME_SYNC=1
+      shift
       ;;
     --) # end of arguments
       shift
@@ -85,6 +92,9 @@ echo "Test resources dir: $VG_RES_DIR"
 if [ "$OPT_VAGRANT_FILE" != "" ] ; then
   echo "Vagrantfile template: $OPT_VAGRANT_FILE"
 fi
+if [ $OPT_NO_WIN_TIME_SYNC -eq 1 ] ; then
+  echo "Disable Windows time sync"
+fi
 echo ""
 
 # Create test dir if required
@@ -103,5 +113,15 @@ fi
 # Copy test resources to vagrant dir
 echo "Copying test resouces from \"$VG_RES_DIR\" to test env. dir"
 cp "$VG_RES_DIR/"* "$VG_TEST_DIR"
+
+# Disable Windows time sync
+if [ $OPT_NO_WIN_TIME_SYNC -eq 1 ] ; then
+  echo "Disable Windos time sync: Start VM"
+  start_box $VG_TEST_DIR "--no-provision"
+  echo "Disable Windos time sync: Modify registry"
+  (cd $VG_TEST_DIR && vagrant winrm --shell cmd --command "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\W32Time\\Parameters\" /v Type /t REG_SZ /d NoSync /f")
+  echo "Disable Windos time sync: Stop box"
+  (cd $VG_TEST_DIR && vagrant halt)
+fi
 
 echo "Done"

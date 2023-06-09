@@ -25,43 +25,6 @@ display_usage() {
 }
 
 
-# Start box
-start_box() (
-  set -euo pipefail
-  VG_DIR=$1
-
-  # Change to vagrant dir
-  cd $VG_DIR
-
-  # Launch box, try multiple times due to issue with vmware_desktop provider
-  MAX_RETRY_LOOPS=10
-  echo "****************"
-  echo "*** Starting vagrant box"
-  echo "****************"
-  EXIT_CODE=0
-  vagrant up || EXIT_CODE=$?
-
-  # Retry if not successful
-  while [ $EXIT_CODE -ne 0 ] ; do
-    # Check for max retries exceeded
-    if [ $MAX_RETRY_LOOPS -eq 0 ] ; then
-      echo "Exceeded max retries"
-      return 1
-    fi
-
-    # Sleep and retry
-    sleep 10
-    ((MAX_RETRY_LOOPS--))
-    echo "****************"
-    echo "*** Retry starting vagrant box ($MAX_RETRY_LOOPS)"
-    echo "****************"
-    EXIT_CODE=0
-    vagrant up || EXIT_CODE=$?
-  done
-  return 0
-)
-
-
 ### Main code starts here
 
 # Check for -h or --help

@@ -57,7 +57,7 @@ test_run_default:
 
 # Test run with clock offset
 .PHONY: test_run_clockoffset
-test_run_clockoffset: export VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb
+test_run_clockoffset: export VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb --no-win-time-sync
 test_run_clockoffset: export VG_TEST_BOX_RUN_PARAMS=--clockoffset
 test_run_clockoffset:
 	@cd $(TEST_DIR) && $(MAKE) test_run

@@ -57,8 +57,7 @@ test_run_default:
 
 # Test run with clock offset
 .PHONY: test_run_clockoffset
-test_run_clockoffset: export VG_TEST_BOX_INIT_PARAMS=--vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb --no-win-time-sync
-test_run_clockoffset: export VG_TEST_BOX_RUN_PARAMS=--clockoffset
+test_run_clockoffset: export TEST_RUN_TYPE=clockoffset
 test_run_clockoffset:
 	@cd $(TEST_DIR) && $(MAKE) test_run
 
@@ -73,6 +72,9 @@ test_run_init: install_box init_box startup_box
 # Execute test run tests
 .PHONY: test_run_tests
 test_run_tests:
+ifeq ($(TEST_RUN_TYPE),clockoffset)
+	$(eval VG_TEST_BOX_RUN_PARAMS = --clockoffset)
+endif
 	@bash $(TEST_DIR)/host/test_box.sh $(VG_TEST_DIR) $(VG_TEST_BOX_RUN_PARAMS)
 
 # Finish test run
@@ -87,6 +89,9 @@ install_box:
 # Initialize Vagrant box instance
 .PHONY: init_box
 init_box:
+ifeq ($(TEST_RUN_TYPE),clockoffset)
+	$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb --no-win-time-sync)
+endif
 	@bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_DIR) $(TEST_RES_DIR) $(VG_TEST_BOX_INIT_PARAMS)
 
 # Startup Vagrant box

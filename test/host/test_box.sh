@@ -21,17 +21,27 @@ testVersionStr() {
   # Get windows version from inside box
   echo "Executing test: VersionStr"
   echo " Executing test command..."
-  STR=$(vagrant winrm --shell cmd --command "ver" | tr -d "\r" | sed -n 2p)
-  STR_EXPECTED="Microsoft Windows [Version 6.1.7601]"
+  local EXIT_CODE=0
+  local STR=$(vagrant winrm --shell cmd --command "ver" | tr -d "\r" | sed -n 2p) || EXIT_CODE=$?
+  local STR_EXPECTED="Microsoft Windows [Version 6.1.7601]"
   echo "  Result  : $STR"
-  echo "  Expected: $STR_EXPECTED"
-  if [ "$STR" == "$STR_EXPECTED" ] ; then
-    echo "  => Success"
-    return 0
-  else
-    echo "  => Failure"
+
+  # Check exit code
+  if [ $EXIT_CODE -ne 0 ] ; then
+    echo "  => Failure: test command exit code: $EXIT_CODE"
     return 1
   fi
+
+  # Check expected string
+  echo "  Expected: $STR_EXPECTED"
+  if [ "$STR" != "$STR_EXPECTED" ] ; then
+    echo "  => Failure: Expected string not found"
+    return 1
+  fi
+
+  # Success
+  echo "  => Success"
+  return 0
 }
 
 
@@ -47,13 +57,44 @@ testTimeDiff() {
   echo " Executing test command..."
   local EXIT_CODE=0
   vagrant winrm --shell cmd --command "cscript //NoLogo C:\\vagrant\\test_time.wsf /hostEpochSecs:$EPOCHSECONDS /maxDiffSecs:60 /expectedOffsetSecs:$EXPECTED_OFFSET_SECS" || EXIT_CODE=$?
-  if [ $EXIT_CODE -eq 0 ] ; then
-    echo "  => Success"
-    return 0
-  else
-    echo "  => Failure"
+
+  # Check exit code
+  if [ $EXIT_CODE -ne 0 ] ; then
+    echo "  => Failure: Test command returned $EXIT_CODE"
     return 1
   fi
+
+  # Success
+  echo "  => Success"
+  return 0
+}
+
+
+# Test license status
+testLicenseStatus() {
+  # Get windows version from inside box
+  echo "Executing test: LicenseStatus"
+  echo " Executing test command..."
+  local EXIT_CODE=0
+  local STR=$(vagrant winrm --shell cmd --command "cscript //NoLogo C:\\Windows\\System32\\slmgr.vbs /dlv" | tr -d "\r") || EXIT_CODE=$?
+  echo "$STR"
+
+  # Check exit code
+  if [ $EXIT_CODE -ne 0 ] ; then
+    echo "  => Failure: Test command returned $EXIT_CODE"
+    return 1
+  fi
+
+  # Check for license status
+  local LICENSE_STATUS=$(echo "$STR" | sed -n "s/License Status: \(.*\)/\1/p")
+  if [ "$LICENSE_STATUS" != "Initial grace period" ] ; then
+    echo "  => Failure: Invalid license status: $LICENSE_STATUS"
+    return 1
+  fi
+
+  # Success
+  echo "  => Success"
+  return 0
 }
 
 
@@ -131,6 +172,9 @@ testVersionStr || TESTS_FAILED=1
 
 # Test time difference
 testTimeDiff $OPT_CLOCKOFFSET || TESTS_FAILED=1
+
+# Testing license status
+testLicenseStatus || TESTS_FAILED=1
 
 # Check for test result
 if [ $TESTS_FAILED -ne 0 ] ; then

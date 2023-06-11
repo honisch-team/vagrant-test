@@ -6,7 +6,6 @@ getVmInfo() {
   local VM_NAME=$2
   local VM_SHOULD_EXIST=${3:-0}
   echo "Retrieving VM info for \"$VM_NAME\"..."
-  #local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
   local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME)
   local VBOXMANAGE_ERROR_CODE=$?
   local TMP_STR_2=$(echo "$TMP_STR" | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
@@ -23,33 +22,6 @@ getVmInfo() {
   fi
   eval "$TMP_STR_2" 2>/dev/null || true
 }
-
-
-# Get VM info
-#getVmInfo() {
-#  local -n arr=$1
-#  local VM_NAME=$2
-#
-#  echo "Retrieving VM info for \"$VM_NAME\"..."
-#  local MAX_RETRY_LOOPS=10
-#  local TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
-#  while [ "$TMP_STR" == "" ] ; do
-#    echo "VM not found"
-#
-#    # Check for max retries exceeded
-#    if [ $MAX_RETRY_LOOPS -eq 0 ] ; then
-#      echo "Exceeded max retries => fail with error"
-#      return 1
-#    fi
-#
-#    # Sleep and retry
-#    sleep 2
-#    ((MAX_RETRY_LOOPS--))
-#    echo "Retrieving VM info for \"$VM_NAME\" ($MAX_RETRY_LOOPS)..."
-#    TMP_STR=$(VBoxManage showvminfo --machinereadable $VM_NAME 2>/dev/null | sed -n "s/^\([^=]\+\)=/arr[\1]=/p")
-#  done
-#  eval "$TMP_STR" 2>/dev/null || true
-#}
 
 
 # Wait for VM shutdown

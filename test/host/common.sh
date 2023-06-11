@@ -69,7 +69,7 @@ start_box() (
   echo "*** Starting vagrant box"
   echo "****************"
   EXIT_CODE=0
-  vagrant up --debug $VG_UP_PARAMS || EXIT_CODE=$?
+  vagrant up --debug $VG_UP_PARAMS 2>> vagrant.log || EXIT_CODE=$?
 
   # Retry if not successful
   while [ $EXIT_CODE -ne 0 ] ; do
@@ -86,7 +86,7 @@ start_box() (
     echo "*** Retry starting vagrant box ($MAX_RETRY_LOOPS)"
     echo "****************"
     EXIT_CODE=0
-    vagrant up --debug || EXIT_CODE=$?
+    vagrant up --debug $VG_UP_PARAMS 2>> vagrant.log || EXIT_CODE=$?
   done
   return 0
 )

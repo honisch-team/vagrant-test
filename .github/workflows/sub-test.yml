@@ -58,3 +58,13 @@ jobs:
       # Test Vagrant box
       - name: Test Vagrant box
         run: make -f ./test/Makefile test_run_${{inputs.test-run-id}} VM_PROVIDER=${{inputs.virt-provider-name}}
+
+      # Upload logs on error
+      - name: Upload logs on error
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Logs_Test_${{inputs.virt-provider-id}}_${{inputs.test-run-id}}
+          path: |
+            ./vagrant-test-env/vagrant.log
+

@@ -298,6 +298,11 @@ echo.
 echo ** Clearing network connection profiles
 CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:clearnetconnectionprofiles || goto error
 
+rem Rearm Windows activation counter
+echo.
+echo ** Rearm Windows activation counter
+cscript //NoLogo C:\Windows\System32\slmgr.vbs /rearm
+
 rem Add page file again on next startup
 echo.
 echo *** Add pagefile

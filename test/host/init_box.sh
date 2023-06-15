@@ -116,11 +116,11 @@ cp "$VG_RES_DIR/"* "$VG_TEST_DIR"
 
 # Disable Windows time sync
 if [ $OPT_NO_WIN_TIME_SYNC -eq 1 ] ; then
-  echo "Disable Windos time sync: Start VM"
+  echo "Disable Windows time sync: Start VM"
   start_box $VG_TEST_DIR "--no-provision"
-  echo "Disable Windos time sync: Modify registry"
+  echo "Disable Windows time sync: Modify registry"
   (cd $VG_TEST_DIR && vagrant winrm --shell cmd --command "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\W32Time\\Parameters\" /v Type /t REG_SZ /d NoSync /f")
-  echo "Disable Windos time sync: Stop box"
+  echo "Disable Windows time sync: Stop box"
   (cd $VG_TEST_DIR && vagrant halt)
 fi
 

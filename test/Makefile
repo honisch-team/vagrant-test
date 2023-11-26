@@ -91,6 +91,8 @@ install_box:
 init_box:
 ifeq ($(TEST_RUN_TYPE),clockoffset)
 	$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb --no-win-time-sync)
+else
+	$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.erb)
 endif
 	@bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_DIR) $(TEST_RES_DIR) $(VG_TEST_BOX_INIT_PARAMS)
 

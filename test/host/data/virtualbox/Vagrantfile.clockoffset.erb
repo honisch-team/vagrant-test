@@ -7,6 +7,10 @@ Vagrant.configure("2") do |config|
   config.vm.box_url = "<%= box_url %>"
   <% end -%>
   
+  # Workaround for WinRM issue "Digest initialization failed" (Vagrant 2.4.0 / MacOS 12)
+  config.winrm.transport = :plaintext
+  config.winrm.basic_auth_only = true
+
   # Modify VM 
   config.vm.provider "virtualbox" do |v|
     # Clock offset +1 year

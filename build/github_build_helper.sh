@@ -40,6 +40,7 @@ display_usage() {
 register_vmware_fusion_serial_no() {
   local SERIAL_NO=$1
   local VMFUSION_INIT_TOOL="/Applications/VMware Fusion.app/Contents/Library/Initialize VMware Fusion.tool"
+  local VMFUSION_LICENSE_PATH_PREFIX="/Library/Preferences/VMware Fusion/license-fusion-"
 
   echo "Register VMware fusion serial number"
   
@@ -51,7 +52,9 @@ register_vmware_fusion_serial_no() {
       echo "Trying serial no: $SERIAL_NO"
       EXIT_CODE=0
       sudo "$VMFUSION_INIT_TOOL" set "" "" "$SERIAL_NO" || EXIT_CODE=$?
-      if [ $EXIT_CODE -eq 0 ] ;  then
+      # Check for license file
+      echo "Checking whether license file was created ($VMFUSION_LICENSE_PATH_PREFIX...)"
+      if ls "$VMFUSION_LICENSE_PATH_PREFIX"* > /dev/null 2>&1; then
         echo "Success"
         exit 0
       else

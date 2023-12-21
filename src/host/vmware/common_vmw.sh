@@ -85,31 +85,6 @@ waitForGuestVar() {
 }
 
 
-# Stop VM via ACPI power button
-stopVmViaPowerButton() {
-  local VM_NAME=$1
-
-  # Get VM info
-  local -A VM_INFO
-  local EXIT_CODE=0
-  getVmInfo VM_INFO $VM_NAME || EXIT_CODE=$?
-  if [ $EXIT_CODE -ne 0 ] ; then
-    # if VM was not found, we're done
-    return 1
-  fi
-
-  # If VM is running => begin shutdown
-  echo "Checking whether VM \"$VM_NAME\" is running..."
-  if [ "${VM_INFO[VMState]}" == "running" ] ; then
-    echo "VM \"$VM_NAME\" is running, stopping via ACPI power button..."
-    VBoxManage controlvm $VM_NAME acpipowerbutton || return 1
-    waitUntilVmStopped $VM_NAME
-  else
-    echo -e "VM \"$VM_NAME\" not running"
-  fi
-}
-
-
 # Wait for VM to start up
 waitUntilVmStartupComplete() {
   local VM_VMX=$1
@@ -138,4 +113,23 @@ waitUntilVmStartupComplete() {
   done
   sleep 5
   echo "VM startup complete"
+}
+
+
+# Start VM with retries
+startVm() {
+  local VM_VMX=$1
+  local MAX_ATTEMPTS=3
+  local EXIT_CODE=0
+  while [ $MAX_ATTEMPTS -gt 0 ] ; do
+    ((MAX_ATTEMPTS--))
+    EXIT_CODE=0
+    vmrun start $VM_VMX nogui || EXIT_CODE=$?
+    if [ $EXIT_CODE -eq 0 ] ; then
+      return 0
+    fi
+    echo "VM start failed, $MAX_ATTEMPTS attempts left"
+    sleep 5
+  done
+  return $EXIT_CODE
 }

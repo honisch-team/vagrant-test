@@ -122,7 +122,7 @@ perl $SCRIPT_DIR/vmx_cmd.pl $VM_VMX set floppy0.fileType=file "floppy0.fileName=
 
 # Start unattended install
 echo "Starting unattended install..."
-vmrun start $VM_VMX nogui
+startVm $VM_VMX
 
 # Wait for install to finish
 echo "Waiting for install to finish..."

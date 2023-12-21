@@ -171,7 +171,7 @@ downloadTools $VM_WORK_DIR
 
 # Startup VM
 echo "Starting VM \"$VM_NAME\"..."
-vmrun start $VM_VMX nogui
+startVm $VM_VMX
 waitForGuestVar $VM_VMX user_logged_in
 
 # Run update

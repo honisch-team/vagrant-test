@@ -58,7 +58,7 @@ VM_STATE=$(getVmState $VM_VMX)
 # If VM is running => power off
 if [ "$VM_STATE" == "running" ] ; then
   echo "VM is running, stopping..."
-  vmrun stop $VM_VMX soft
+  vmrun stop $VM_VMX hard
   sleep 5
   echo "VM is stopped"
 else

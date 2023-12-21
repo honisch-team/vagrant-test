@@ -19,7 +19,7 @@ source $SCRIPT_DIR/common.sh
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTION] BOX_NAME TEST_DIR RES_DIR\n"
+  echo -e "Usage: $0 [OPTIONS] BOX_NAME TEST_DIR RES_DIR\n"
   echo "Install Vagrant box file"
   echo "BOX_NAME:  Name for Vagrant box"
   echo "TEST_DIR:  Vagrant test environment dir"
@@ -29,7 +29,6 @@ display_usage() {
   echo "  -h, --help                display this help and exit"
   echo "  -v, --vagrantfile=FILE    initialize box with given Vagrantfile template"
   echo "  -t, --no-win-time-sync    initialize box with given Vagrantfile template"
-
   echo ""
 }
 
@@ -117,7 +116,7 @@ cp "$VG_RES_DIR/"* "$VG_TEST_DIR"
 # Disable Windows time sync
 if [ $OPT_NO_WIN_TIME_SYNC -eq 1 ] ; then
   echo "Disable Windows time sync: Start VM"
-  start_box $VG_TEST_DIR "--no-provision"
+  start_box $VG_TEST_DIR "" "--no-provision"
   echo "Disable Windows time sync: Modify registry"
   (cd $VG_TEST_DIR && vagrant winrm --shell cmd --command "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\W32Time\\Parameters\" /v Type /t REG_SZ /d NoSync /f")
   echo "Disable Windows time sync: Stop box"

@@ -103,7 +103,7 @@
       <Order>2</Order>
      </SynchronousCommand>
      <SynchronousCommand wcm:action="add">
-      <CommandLine>cmd /c "F:\vmw_post_install_1.bat"</CommandLine>
+      <CommandLine>cmd /c "F:\@@POST_INSTALL_SCRIPT@@"</CommandLine>
       <Order>3</Order>
      </SynchronousCommand>
     </FirstLogonCommands>

@@ -61,8 +61,8 @@ jobs:
       # Update VM
       - name: Update VM
         timeout-minutes: 720
-        run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}}
-        #run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
+        #run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}}
+        run: make -f ./src/Makefile update_vm_${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
 
       # Package box
       - name: Build Vagrant box
@@ -70,11 +70,20 @@ jobs:
 
       # Upload Dist artifact
       - name: Upload Dist artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Dist_${{inputs.virt-provider-id}}
           path: ./dist/${{inputs.virt-provider-name}}
           retention-days: 5
+
+      # Upload logs
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Logs_Build_${{inputs.virt-provider-name}}
+          path: |
+            ./vm-base/**/*.log
 
 
   # Test Vagrant box

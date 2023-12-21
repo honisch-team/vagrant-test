@@ -22,6 +22,7 @@ VG_TEST_DIR := $(ROOT_DIR)/vagrant-test-env
 ifndef MAKE_VIRTUALBOX
 ifneq ($(shell which vboxmanage),)
 export MAKE_VIRTUALBOX=1
+$(info *** VirtualBox detected ***)
 else
 export MAKE_VIRTUALBOX=
 endif

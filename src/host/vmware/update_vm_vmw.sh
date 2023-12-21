@@ -225,7 +225,7 @@ done
 # Cleanup
 if [ "$OPT_NO_CLEANUP_FILES" -eq 0 ] ; then
   echo "Removing files from VM"
-  runCommandInVm $VM_VMX "schtasks /delete /tn vmw_on_logon /f" || true
+  runCommandInVm $VM_VMX "schtasks /delete /tn on_logon_vmw /f" || true
   vmrun -gu $VM_USER -gp $VM_PASSWORD deleteDirectoryInGuest $VM_VMX "C:\\Temp"
 else
   echo "Debug mode: Skip removing files from VM"

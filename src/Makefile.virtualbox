@@ -35,7 +35,7 @@ create_vm_vbx:
 # Install operating system in VirtualBox VM
 .PHONY: install_os_vm_vbx
 install_os_vm_vbx:
-	@bash $(SRC_DIR)/host/virtualbox/install_os_vm_vbx.sh $(VM_NAME) "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
+	@bash $(SRC_DIR)/host/virtualbox/install_os_vm_vbx.sh $(VM_NAME) "$(SRC_DIR)/host/virtualbox/work" "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
 
 # Update VirtualBox VM after OS install
 .PHONY: update_vm_vbx

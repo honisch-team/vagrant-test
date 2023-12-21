@@ -57,36 +57,48 @@ destroyBox() {
 # Start box
 start_box() (
   set -euo pipefail
-  VG_DIR=$1
-  VG_UP_PARAMS=${2:-}
+  local VG_DIR=$1
+  local VG_DEBUG_LOG=$2
+  local VG_UP_PARAMS=${3:-}
 
   # Change to vagrant dir
   cd $VG_DIR
 
-  # Launch box, try multiple times due to issue with vmware_desktop provider
-  MAX_RETRY_LOOPS=10
+  local MAX_ATTEMPTS=10
   echo "****************"
   echo "*** Starting vagrant box"
   echo "****************"
-  EXIT_CODE=0
-  vagrant up --debug $VG_UP_PARAMS 2>> vagrant.log || EXIT_CODE=$?
+  local EXIT_CODE=0
 
-  # Retry if not successful
-  while [ $EXIT_CODE -ne 0 ] ; do
-    # Check for max retries exceeded
-    if [ $MAX_RETRY_LOOPS -eq 0 ] ; then
-      echo "Exceeded max retries"
-      return 1
+  # Create log dir if necessary
+  if [ ! -z "$VG_DEBUG_LOG" ] ; then
+    local LOG_DIR=$(dirname $VG_DEBUG_LOG)
+    if [ ! -d $LOG_DIR ] ; then
+      mkdir -p $LOG_DIR
+    fi
+  fi
+
+  # Launch box, try multiple times due to issue with vmware_desktop provider
+  while [ $MAX_ATTEMPTS -gt 0 ] ; do
+    ((MAX_ATTEMPTS--))
+    EXIT_CODE=0
+
+    if [ -z "$VG_DEBUG_LOG" ] ; then
+      vagrant up $VG_UP_PARAMS || EXIT_CODE=$?
+    else
+      vagrant up --debug $VG_UP_PARAMS 2>> "$VG_DEBUG_LOG" || EXIT_CODE=$?
     fi
 
-    # Sleep and retry
+    # Exit if launch successful
+    if [ $EXIT_CODE -eq 0 ] ; then
+      return 0
+    fi
+
+    # On failure: Sleep and retry
+    echo "Starting vagrant box failed, $MAX_ATTEMPTS attempts left"
     sleep 10
-    ((MAX_RETRY_LOOPS--))
-    echo "****************"
-    echo "*** Retry starting vagrant box ($MAX_RETRY_LOOPS)"
-    echo "****************"
-    EXIT_CODE=0
-    vagrant up --debug $VG_UP_PARAMS 2>> vagrant.log || EXIT_CODE=$?
   done
-  return 0
+
+  # Giving up, return error code
+  return $EXIT_CODE
 )

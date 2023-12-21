@@ -12,6 +12,7 @@ failure() {
 }
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
+
 # Display usage
 display_usage() {
   echo -e "Usage: $0 SOURCE_URL DEST_FILE CHECKSUM_SHA1\n"
@@ -35,7 +36,7 @@ verify_checksum() {
   if [ $SHASUM_EXITCODE -eq 0 ] ; then
     echo "Checksum OK"
     return 0
-  else 
+  else
     echo "Checksum MISMATCH for \"$CHECK_FILE\""
     return 1
   fi

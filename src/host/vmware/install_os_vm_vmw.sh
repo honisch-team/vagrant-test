@@ -65,12 +65,21 @@ echo ""
 
 VM_DIR=$VM_BASE_DIR/$VM_NAME
 VM_VMX=$VM_DIR/$VM_NAME.vmx
-VMWARE_TOOLS_ISO="/Applications/VMware Fusion.app/Contents/Library/isoimages/x86_x64/windows.iso"
 
-# Check for VMware tools iso
-if [ ! -f "$VMWARE_TOOLS_ISO" ] ; then
-  echo "VMware Tools ISO not found: $VMWARE_TOOLS_ISO"
-  return 1
+VM_GUEST_TOOLS_ISO_LINUX="/usr/lib/vmware/isoimages/windows.iso"
+VM_GUEST_TOOLS_ISO_MAC="/Applications/VMware Fusion.app/Contents/Library/isoimages/x86_x64/windows.iso"
+
+# Check for Guest Additions iso
+echo -n "Checking for Guest Additions ISO..."
+if [ -f "$VM_GUEST_TOOLS_ISO_LINUX" ] ; then
+  echo "found: $VM_GUEST_TOOLS_ISO_LINUX"
+  VM_GUEST_TOOLS_ISO=$VM_GUEST_TOOLS_ISO_LINUX
+elif [ -f "$VM_GUEST_TOOLS_ISO_MAC" ] ; then
+  echo "found: $VM_GUEST_TOOLS_ISO_MAC"
+  VM_GUEST_TOOLS_ISO=$VM_GUEST_TOOLS_ISO_MAC
+else
+  echo "Error: Guest Additions ISO not found"
+  exit 1
 fi
 
 # Create work dir if required
@@ -81,16 +90,13 @@ fi
 # Prepare floppy image
 echo "Preparing floppy image..."
 VM_FLOPPY_SRC_DIR=$VM_WORK_DIR/autoinst.flp.src
-VM_FLOPPY_DMG=$VM_WORK_DIR/autoinst.dmg
-VM_FLOPPY_FLP=$VM_WORK_DIR/autoinst.flp
+VM_FLOPPY_IMG=$VM_WORK_DIR/autoinst.flp
 if [ ! -d $VM_FLOPPY_SRC_DIR ] ; then
   mkdir -p $VM_FLOPPY_SRC_DIR
 fi
-sed -e "s/@@HOSTNAME@@/$VM_HOSTNAME/g;s/@@USERNAME@@/$VM_USER/g;s/@@PASSWORD@@/$VM_PASSWORD/g" "$SCRIPT_DIR/autounattend.xml" > "$VM_FLOPPY_SRC_DIR/autounattend.xml"
-# hdiutil always creates floppy image file as *.dmg
-hdiutil create -size 1440k -fs "MS-DOS FAT12" -layout NONE -srcfolder "$VM_FLOPPY_SRC_DIR" -format UDRW -ov "$VM_FLOPPY_DMG"
-# Rename floppy image file to *.flp so it works in VMware
-mv "$VM_FLOPPY_DMG" "$VM_FLOPPY_FLP"
+VM_AUTO_UNATTENDED_XML=$SCRIPT_DIR/../common/autounattend.xml
+sed -e "s/@@HOSTNAME@@/$VM_HOSTNAME/g;s/@@USERNAME@@/$VM_USER/g;s/@@PASSWORD@@/$VM_PASSWORD/g;s/@@POST_INSTALL_SCRIPT@@/post_install_1_vmw.bat/g" "$VM_AUTO_UNATTENDED_XML" > "$VM_FLOPPY_SRC_DIR/autounattend.xml"
+bash $SCRIPT_DIR/../common/create_floppy_image.sh "$VM_FLOPPY_SRC_DIR" "$VM_FLOPPY_IMG"
 
 # Provide additional install files
 VM_INSTALL_FILES_SRC_DIR=$VM_WORK_DIR/install_files.src
@@ -105,18 +111,18 @@ KB4474419_URL=https://catalog.s.download.windowsupdate.com/c/msdownload/update/s
 (cd $VM_INSTALL_FILES_SRC_DIR && curl -o kb4474419.msu $KB4474419_URL)
 
 # Provide scripts
-cp $SCRIPT_DIR/vmw_post_install* $VM_INSTALL_FILES_SRC_DIR/
-cp $SCRIPT_DIR/vmw_on_logon.bat $VM_INSTALL_FILES_SRC_DIR/
+cp $SCRIPT_DIR/post_install_*vmw.bat $VM_INSTALL_FILES_SRC_DIR/
+cp $SCRIPT_DIR/on_logon_vmw.bat $VM_INSTALL_FILES_SRC_DIR/
 
 # Create iso from install files dir
-echo "Creating iso image containing additional install files"
-hdiutil makehybrid -iso -joliet -o $VM_INSTALL_FILES_ISO $VM_INSTALL_FILES_SRC_DIR
+echo "Creating iso image containing additional install files..."
+bash $SCRIPT_DIR/../common/create_iso_image.sh $VM_INSTALL_FILES_SRC_DIR $VM_INSTALL_FILES_ISO
 
 # Preparing VM for unattended install
 echo "Preparing VM for unattended install..."
-perl $SCRIPT_DIR/vmx_cmd.pl $VM_VMX set floppy0.fileType=file "floppy0.fileName=$VM_FLOPPY_FLP" floppy0.clientDevice=FALSE \
+perl $SCRIPT_DIR/vmx_cmd.pl $VM_VMX set floppy0.fileType=file "floppy0.fileName=$VM_FLOPPY_IMG" floppy0.clientDevice=FALSE \
   "sata0:0.deviceType=cdrom-image" "sata0:0.fileName=$VM_INSTALL_MEDIA" "sata0:0.present=TRUE" \
-  "sata0:1.deviceType=cdrom-image" "sata0:1.fileName=$VMWARE_TOOLS_ISO" "sata0:1.present=TRUE" \
+  "sata0:1.deviceType=cdrom-image" "sata0:1.fileName=$VM_GUEST_TOOLS_ISO" "sata0:1.present=TRUE" \
   "sata0:2.deviceType=cdrom-image" "sata0:2.fileName=$VM_INSTALL_FILES_ISO" "sata0:2.present=TRUE" \
   bios.bootOrder=hdd,cdrom
 

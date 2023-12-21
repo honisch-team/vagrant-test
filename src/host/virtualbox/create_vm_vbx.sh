@@ -88,7 +88,7 @@ VBoxManage storageattach $VM_NAME --storagectl "SATA" --port 0 --device 0 --type
 
 # Configure VM
 echo "Configuring VM..."
-VBoxManage modifyvm $VM_NAME --memory $VM_RAM --vram $VM_VIDEO_RAM --cpus $VM_CPU_COUNT --ioapic on \
-  --graphicscontroller vboxsvga --audio none --usbohci on --mouse usb --pae off --clipboard=hosttoguest
+VBoxManage modifyvm $VM_NAME --memory $VM_RAM --vram $VM_VIDEO_RAM --cpus $VM_CPU_COUNT --ioapic on --graphicscontroller vboxsvga \
+  --audio none --usbohci on --mouse usb --pae off --clipboard=hosttoguest --rtcuseutc on
 
 echo "Done creating VM \"$VM_NAME\""

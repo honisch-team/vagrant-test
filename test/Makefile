@@ -13,6 +13,9 @@ TEST_DATA_DIR := $(TEST_DIR)/host/data
 # Test guest resources dir
 TEST_RES_DIR := $(TEST_DIR)/guest
 
+# Test log dir
+TEST_LOG_DIR := $(TEST_DIR)/logs
+
 # Make all
 .PHONY: all
 all: test
@@ -52,6 +55,7 @@ endif
 
 # Default test run
 .PHONY: test_run_default
+test_run_default: export TEST_RUN_TYPE=default
 test_run_default:
 	@cd $(TEST_DIR) && $(MAKE) test_run
 
@@ -99,7 +103,7 @@ endif
 # Startup Vagrant box
 .PHONY: startup_box
 startup_box:
-	@bash $(TEST_DIR)/host/startup_box.sh $(VG_TEST_DIR)
+	@bash $(TEST_DIR)/host/startup_box.sh -d "$(TEST_LOG_DIR)/vagrant_$(VM_PROVIDER)_$(TEST_RUN_TYPE).log" $(VG_TEST_DIR)
 
 # Shutdown Vagrant box
 .PHONY: shutdown_box

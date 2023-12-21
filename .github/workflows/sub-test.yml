@@ -39,15 +39,15 @@ jobs:
           echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
 
       # Workaround for vagrant MD4 issue
-      - name: Downgrade vagrant to v2.3.6
-        run: |
-          VER=$(vagrant --version | sed -e "s/Vagrant //")
-          echo "Installed Vagrant version: $VER"
-          if [ "$VER" == "2.3.7" ] ; then
-            echo "Downgrade to Vagrant 2.3.6 due to MD4 openssl issue"
-            brew upgrade --cask https://raw.githubusercontent.com/Homebrew/homebrew-cask/08e7a8455629e77bf7dbb63ed0a29a731a9bbee3/Casks/vagrant.rb
-            vagrant plugin update
-          fi
+      #- name: Downgrade vagrant to v2.3.6
+      #  run: |
+      #    VER=$(vagrant --version | sed -e "s/Vagrant //")
+      #    echo "Installed Vagrant version: $VER"
+      #    if [ "$VER" == "2.3.7" ] ; then
+      #      echo "Downgrade to Vagrant 2.3.6 due to MD4 openssl issue"
+      #      brew upgrade --cask https://raw.githubusercontent.com/Homebrew/homebrew-cask/08e7a8455629e77bf7dbb63ed0a29a731a9bbee3/Casks/vagrant.rb
+      #      vagrant plugin update
+      #    fi
 
       # Setup VMware Fusion
       - name: Setup VMware Fusion
@@ -61,7 +61,7 @@ jobs:
 
       # Download Dist artifact
       - name: Download Dist artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Dist_${{inputs.virt-provider-id}}
           path: ./dist/${{inputs.virt-provider-name}}
@@ -70,12 +70,12 @@ jobs:
       - name: Test Vagrant box
         run: make -f ./test/Makefile test_run_${{inputs.test-run-id}} VM_PROVIDER=${{inputs.virt-provider-name}}
 
-      # Upload logs on error
-      - name: Upload logs on error
+      # Upload logs
+      - name: Upload logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: Logs_Test_${{inputs.virt-provider-id}}_${{inputs.test-run-id}}
+          name: Logs_Test_${{inputs.virt-provider-name}}_${{inputs.test-run-id}}
           path: |
-            ./vagrant-test-env/vagrant.log
+            ./test/logs
 

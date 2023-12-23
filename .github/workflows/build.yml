@@ -15,7 +15,7 @@ jobs:
       # Check out
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       # Upgrade Mac OS tools
       - name: Upgrade Mac OS tools
         run: |
@@ -40,7 +40,7 @@ jobs:
       - name: "Downloading install media: ${{env.VM_INSTALL_MEDIA_FILE}}"
         if: steps.check-cache.outputs.cache-hit != 'true'
         run: make -f ./build/Makefile get_install_media
-        
+
       # Store install media in cache if no cache hit
       - name: "Store install media in cache"
         if: steps.check-cache.outputs.cache-hit != 'true'
@@ -64,17 +64,28 @@ jobs:
             virt-provider-id: vbx
           - virt-provider-name: vmware
             virt-provider-id: vmw
-    
+
     # Reference reusable workflow to do the actual building and testing
     uses: ./.github/workflows/sub-build-and-test.yml
-    
+
     # Inherit secrets
     secrets: inherit
-    
+
     # Pass parameters to the sub-workflow
     with:
       # Virtualization provider name
       virt-provider-name: ${{matrix.virt-provider-name}}
       # Virtualization provider ID
       virt-provider-id: ${{matrix.virt-provider-id}}
-      
+
+
+  # Rerun failed jobs
+  rerun-failed-jobs:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: failure()
+    steps:
+      - name: Rerun failed jobs in the current workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run rerun ${{ github.run_id }} --failed

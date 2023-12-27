@@ -38,17 +38,6 @@ jobs:
           brew install gnu-getopt
           echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
 
-      # Workaround for vagrant MD4 issue
-      #- name: Downgrade vagrant to v2.3.6
-      #  run: |
-      #    VER=$(vagrant --version | sed -e "s/Vagrant //")
-      #    echo "Installed Vagrant version: $VER"
-      #    if [ "$VER" == "2.3.7" ] ; then
-      #      echo "Downgrade to Vagrant 2.3.6 due to MD4 openssl issue"
-      #      brew upgrade --cask https://raw.githubusercontent.com/Homebrew/homebrew-cask/08e7a8455629e77bf7dbb63ed0a29a731a9bbee3/Casks/vagrant.rb
-      #      vagrant plugin update
-      #    fi
-
       # Setup VMware Fusion
       - name: Setup VMware Fusion
         if: inputs.virt-provider-name == 'vmware'

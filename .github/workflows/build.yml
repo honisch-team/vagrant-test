@@ -11,6 +11,7 @@ jobs:
   # Cache installation media
   cache-install-media:
     runs-on: macos-12
+    timeout-minutes: 60
     steps:
       # Check out
       - name: Checkout

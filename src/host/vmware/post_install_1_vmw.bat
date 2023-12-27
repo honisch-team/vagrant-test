@@ -48,11 +48,6 @@ goto :eof
 
 :log
 set MSG=%~1
-if "%MSG%"=="" (
-  echo.
-  echo. >>%LOGFILE%
-) else (
-  echo %MSG%
-  echo %MSG% >>%LOGFILE%
-)
+echo %DATE% %TIME:~0,-3% %MSG%
+echo %DATE% %TIME:~0,-3% %MSG% >>%LOGFILE%
 exit /b 0

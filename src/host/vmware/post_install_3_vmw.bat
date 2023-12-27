@@ -23,8 +23,8 @@ schtasks /create /sc onlogon /tn on_logon_vmw /tr "C:\Windows\Temp\on_logon_vmw.
 call :log
 call :log "*** Signal end of OS install"
 rem The following message doesn't work with "call :log" due to contained double quotes
-echo *** Running: "%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.installation_finished y"
-echo *** Running: "%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.installation_finished y" >>%LOGFILE%
+echo %DATE% %TIME:~0,-3% *** Running: "%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.installation_finished y"
+echo %DATE% %TIME:~0,-3% *** Running: "%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.installation_finished y" >>%LOGFILE%
 "%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.installation_finished y"
 
 call :log
@@ -45,11 +45,6 @@ goto :eof
 
 :log
 set MSG=%~1
-if "%MSG%"=="" (
-  echo.
-  echo. >>%LOGFILE%
-) else (
-  echo %MSG%
-  echo %MSG% >>%LOGFILE%
-)
+echo %DATE% %TIME:~0,-3% %MSG%
+echo %DATE% %TIME:~0,-3% %MSG% >>%LOGFILE%
 exit /b 0

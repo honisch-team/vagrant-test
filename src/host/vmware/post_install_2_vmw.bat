@@ -16,8 +16,8 @@ schtasks /delete /tn post_install_2_vmw /f || goto error
 call :log
 call :log "*** Installing VMware Tools"
 rem The following message doesn't work with "call :log" due to contained double quotes
-echo *** Running: E:\setup.exe /S /v "/qn REBOOT=R"
-echo *** Running: E:\setup.exe /S /v "/qn REBOOT=R" >>%LOGFILE%
+echo %DATE% %TIME:~0,-3% *** Running: E:\setup.exe /S /v "/qn REBOOT=R"
+echo %DATE% %TIME:~0,-3% *** Running: E:\setup.exe /S /v "/qn REBOOT=R" >>%LOGFILE%
 E:\setup.exe /S /v "/qn REBOOT=R"
 if %ERRORLEVEL% equ 0 goto vmware_tools_success
 if %ERRORLEVEL% equ 3010 goto vmware_tools_success
@@ -55,11 +55,6 @@ goto :eof
 
 :log
 set MSG=%~1
-if "%MSG%"=="" (
-  echo.
-  echo. >>%LOGFILE%
-) else (
-  echo %MSG%
-  echo %MSG% >>%LOGFILE%
-)
+echo %DATE% %TIME:~0,-3% %MSG%
+echo %DATE% %TIME:~0,-3% %MSG% >>%LOGFILE%
 exit /b 0

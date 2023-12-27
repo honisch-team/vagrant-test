@@ -24,7 +24,7 @@ display_usage() {
   echo ""
   echo "Options:"
   echo "  -h, --help            display this help and exit"
-  echo "  -d, --debug-log=FILE  logfile for debug messages"
+  echo "  -d, --debug-log=DIR   log directory for debug logging"
   echo ""
 }
 
@@ -76,7 +76,7 @@ echo "**************************************"
 echo "*** Starting Vagrant box in \"$VG_TEST_DIR\""
 echo "**************************************"
 if [ "$OPT_DEBUG_LOG" != "" ] ; then
-  echo "Debug logfile: $OPT_DEBUG_LOG"
+  echo "Debug log dir: $OPT_DEBUG_LOG"
 fi
 
 # Start box

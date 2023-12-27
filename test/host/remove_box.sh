@@ -17,10 +17,10 @@ source $SCRIPT_DIR/common.sh
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 BOX_NAME\n"
+  echo -e "Usage: $0 BOX_NAME PROVIDER\n"
   echo "Remove Vagrant box"
-  echo "BOX_NAME: Name of Vagrant box to be removed"
-  echo ""
+  echo "BOX_NAME:  Name of Vagrant box to be removed"
+  echo "PROVIDER:  Vagrant provider"
 }
 
 
@@ -33,18 +33,21 @@ if [[ ($@ == "--help") || $@ == "-h" ]] ; then
 fi
 
 # Check for correct number of arguments
-if [ $# -ne 1 ] ; then
+if [ $# -ne 2 ] ; then
   display_usage
   exit 1
 fi
 
 # Read params
 VG_BOX_NAME=$1
+VG_PROVIDER=$2
 
 echo "**************************************"
 echo "*** Removing box \"$VG_BOX_NAME\""
 echo "**************************************"
+echo "Provider: $VG_PROVIDER"
+echo ""
 
-removeBox $VG_BOX_NAME || true
+removeBox $VG_BOX_NAME $VG_PROVIDER || true
 
 echo "Done"

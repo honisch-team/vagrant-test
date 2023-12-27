@@ -1,23 +1,18 @@
 ### Connect generic goals to VirtualBox-specific goals
 
 # Build virtual machine
-.PHONY: build
 build: build_vbx
 
 # Package virtual machine
-.PHONY: package
 package: package_vbx
 
 # Remove virtual machine
-.PHONY: PHONY
 remove_vm: remove_vm_vbx
 
 # Clean dist folder
-.PHONY: PHONY
 dist_clean: dist_clean_vbx
 
 # Clean work dir
-.PHONY: PHONY
 work_clean: work_clean_vbx
 
 
@@ -35,7 +30,7 @@ create_vm_vbx:
 # Install operating system in VirtualBox VM
 .PHONY: install_os_vm_vbx
 install_os_vm_vbx:
-	@bash $(SRC_DIR)/host/virtualbox/install_os_vm_vbx.sh $(VM_NAME) "$(SRC_DIR)/host/virtualbox/work" "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
+	@bash $(SRC_DIR)/host/virtualbox/install_os_vm_vbx.sh -d $(SRC_LOG_DIR)/virtualbox $(VM_NAME) "$(SRC_DIR)/host/virtualbox/work" "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
 
 # Update VirtualBox VM after OS install
 .PHONY: update_vm_vbx

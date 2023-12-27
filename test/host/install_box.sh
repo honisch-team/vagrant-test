@@ -17,10 +17,11 @@ source $SCRIPT_DIR/common.sh
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 BOX_NAME BOX_FILE\n"
+  echo -e "Usage: $0 BOX_NAME BOX_FILE PROVIDER\n"
   echo "Install Vagrant box file"
   echo "BOX_NAME:  Name for Vagrant box"
   echo "BOX_FILE:  Vagrant box file to test"
+  echo "PROVIDER:  Vagrant provider"
   echo ""
 }
 
@@ -34,7 +35,7 @@ if [[ ($@ == "--help") || $@ == "-h" ]] ; then
 fi
 
 # Check for correct number of arguments
-if [ $# -ne 2 ] ; then
+if [ $# -ne 3 ] ; then
   display_usage
   exit 1
 fi
@@ -42,16 +43,18 @@ fi
 # Read params
 VG_BOX_NAME=$1
 VG_BOX_FILE=$2
+VG_PROVIDER=$3
 
 echo "**************************************"
 echo "*** Installing Vagrant box file \"$VG_BOX_NAME\""
 echo "**************************************"
 echo "Box file: $VG_BOX_FILE"
+echo "Provider: $VG_PROVIDER"
 echo ""
 
 # Check if box installed
 EXIT_CODE=0
-isBoxInstalled $VG_BOX_NAME || EXIT_CODE=$?
+isBoxInstalled $VG_BOX_NAME $VG_PROVIDER || EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ] ; then
   # Add box

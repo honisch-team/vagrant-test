@@ -1,23 +1,18 @@
 ### Connect generic goals to VMware-specific goals
 
 # Build virtual machine
-.PHONY: build
 build: build_vmw
 
 # Package virtual machine
-.PHONY: package
 package: package_vmw
 
 # Remove virtual machine
-.PHONY: PHONY
 remove_vm: remove_vm_vmw
 
 # Clean dist folder
-.PHONY: PHONY
 dist_clean: dist_clean_vmw
 
 # Clean work dir
-.PHONY: PHONY
 work_clean: work_clean_vmw
 
 

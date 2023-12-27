@@ -98,7 +98,7 @@ echo ""
 
 # Create test dir if required
 if [ ! -d $VG_TEST_DIR ] ; then
-  mkdir $VG_TEST_DIR
+  mkdir -p $VG_TEST_DIR
 fi
 
 # Init environment

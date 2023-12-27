@@ -4,7 +4,7 @@ ROOT_DIR := $(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)
 # Include common settings
 include $(ROOT_DIR)/build/Makefile.common
 
-# Vagrant box test name
+# Vagrant text box name prefix
 VG_TEST_BOX_NAME := test-box
 
 # Test data dir
@@ -14,7 +14,11 @@ TEST_DATA_DIR := $(TEST_DIR)/host/data
 TEST_RES_DIR := $(TEST_DIR)/guest
 
 # Test log dir
-TEST_LOG_DIR := $(TEST_DIR)/logs
+TEST_LOG_DIR := $(LOG_DIR)/test
+
+# Test run types
+TEST_RUN_TYPES := default clockoffset
+
 
 # Make all
 .PHONY: all
@@ -22,100 +26,116 @@ all: test
 
 # Clean
 .PHONY: clean
-clean: destroy_box remove_box
 
 # Test
 .PHONY: test
 
-### Begin VirtualBox-specific
 ifeq ($(MAKE_VIRTUALBOX),1)
-$(info *** Including VirtualBox testing rules ***)
-test: test_vbx
-
-# Test VirtualBox VM
-.PHONY: test_vbx
-test_vbx: export VM_PROVIDER=virtualbox
-test_vbx:
-	@cd $(TEST_DIR) && $(MAKE) test_run_default test_run_clockoffset
+$(info *** Including VirtualBox test rules ***)
+# Include VirtualBox-specific rules
+include $(TEST_DIR)/Makefile.virtualbox
 endif
-### End VirtualBox-specific
 
-### Begin VMware-specific
 ifeq ($(MAKE_VMWARE),1)
-$(info *** Including VMware testing rules ***)
-test: test_vmw
-
-# Test VMware VM
-.PHONY: test_vmw
-test_vmw: export VM_PROVIDER=vmware
-test_vmw:
-	@cd $(TEST_DIR) && $(MAKE) test_run_default test_run_clockoffset
+$(info *** Including VMware test rules ***)
+# Include VMware-specific rules
+include $(TEST_DIR)/Makefile.vmware
 endif
-### End VMware-specific
 
-# Default test run
-.PHONY: test_run_default
-test_run_default: export TEST_RUN_TYPE=default
-test_run_default:
-	@cd $(TEST_DIR) && $(MAKE) test_run
+# All test runs
+define testrun_all # $1: VM provider, $2: Vagrant provider
+	@echo "*** testrun_all: VM provider: $1, Vagrant provider: $2"
+	$(foreach test_run_type,$(TEST_RUN_TYPES),
+		$(call testrun,$1,$2,$(test_run_type))
+	)
+endef
 
-# Test run with clock offset
-.PHONY: test_run_clockoffset
-test_run_clockoffset: export TEST_RUN_TYPE=clockoffset
-test_run_clockoffset:
-	@cd $(TEST_DIR) && $(MAKE) test_run
+# Clean all testruns
+define clean_all # $1: VM provider, $2: Vagrant provider
+	@echo "*** clean_all: VM provider: $1, Vagrant provider: $2"
+	$(foreach test_run_type,$(TEST_RUN_TYPES),
+		$(call destroy_box,$1,$(test_run_type))
+		$(call clean_test_logs,$1,$(test_run_type))
+	)
+	$(call remove_box,$2)
+endef
 
-# Test run
-.PHONY: test_run
-test_run: test_run_init test_run_tests test_run_finish
+# Clean test logs
+define clean_test_logs # $1: VM provider, $2: Test run type
+	@-rm -rf "$(TEST_LOG_DIR)/vagrant_$(1)_$(2)"
+endef
+
+# Single test run
+define testrun # $1: VM provider, $2: Vagrant provider, $3: Test run type
+	@echo "*** testrun: VM provider: $1, Vagrant provider: $2, Test run type: $3"
+	$(call test_run_init,$1,$2,$3)
+	$(call test_run_tests,$1,$3)
+	$(call test_run_finish,$1,$2,$3)
+endef
 
 # Initialize test run
-.PHONY: test_run_init
-test_run_init: install_box init_box startup_box
-
-# Execute test run tests
-.PHONY: test_run_tests
-test_run_tests:
-ifeq ($(TEST_RUN_TYPE),clockoffset)
-	$(eval VG_TEST_BOX_RUN_PARAMS = --clockoffset)
-endif
-	@bash $(TEST_DIR)/host/test_box.sh $(VG_TEST_DIR) $(VG_TEST_BOX_RUN_PARAMS)
-
-# Finish test run
-.PHONY: test_run_finish
-test_run_finish: shutdown_box destroy_box
+define test_run_init # $1: VM provider, $2: Vagrant provider, $3: Test run type
+	@echo "*** testrun_init: VM provider: $1, Vagrant provider: $2, Test run type: $3"
+	$(call install_box,$1,$2)
+	$(call init_box,$1,$3)
+	$(call startup_box,$1,$3)
+endef
 
 # Install Vagrant box
-.PHONY: install_box
-install_box:
-	@bash $(TEST_DIR)/host/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(VM_PROVIDER)/$(VM_NAME).box
-
-# Initialize Vagrant box instance
-.PHONY: init_box
-init_box:
-ifeq ($(TEST_RUN_TYPE),clockoffset)
-	$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb --no-win-time-sync)
-else
-	$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.erb)
-endif
-	@bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_DIR) $(TEST_RES_DIR) $(VG_TEST_BOX_INIT_PARAMS)
-
-# Startup Vagrant box
-.PHONY: startup_box
-startup_box:
-	@bash $(TEST_DIR)/host/startup_box.sh -d "$(TEST_LOG_DIR)/vagrant_$(VM_PROVIDER)_$(TEST_RUN_TYPE).log" $(VG_TEST_DIR)
-
-# Shutdown Vagrant box
-.PHONY: shutdown_box
-shutdown_box:
-	@bash $(TEST_DIR)/host/shutdown_box.sh $(VG_TEST_DIR)
-
-# Destroy Vagrant box
-.PHONY: destroy_box
-destroy_box:
-	@-bash $(TEST_DIR)/host/destroy_box.sh $(VG_TEST_DIR)
+define install_box # $1: VM provider, $2: Vagrant provider
+	@bash $(TEST_DIR)/host/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(1)/$(VM_NAME).box $(2)
+endef
 
 # Remove Vagrant box
-.PHONY: remove_box
-remove_box:
-	@-bash $(TEST_DIR)/host/remove_box.sh $(VG_TEST_BOX_NAME)
+define remove_box # $1: Vagrant provider
+	@-bash $(TEST_DIR)/host/remove_box.sh $(VG_TEST_BOX_NAME) $(1)
+endef
+
+# Initialize Vagrant box instance
+define init_box # $1: VM provider, $2: Test run type
+	@echo "*** init_box: VM provider: $1, Test run type: $2"
+	$(if $(filter $2,clockoffset),
+		$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(1)/Vagrantfile.clockoffset.erb --no-win-time-sync)
+	)
+	$(if $(filter $2,default),
+		$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(1)/Vagrantfile.erb)
+	)
+	bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_ROOT_DIR)/$1/$2 $(TEST_RES_DIR) $(VG_TEST_BOX_INIT_PARAMS)
+endef
+
+# Destroy Vagrant box
+define destroy_box # $1: VM provider, $2: Test run type
+	@echo "*** destroy_box: VM provider: $1, Test run type: $2"
+	@-bash $(TEST_DIR)/host/destroy_box.sh $(VG_TEST_ROOT_DIR)/$1/$2
+endef
+
+# Startup Vagrant box
+define startup_box # $1: VM provider, $2: Test run type
+	@echo "*** startup_box: VM provider: $1, Test run type: $2"
+	@bash $(TEST_DIR)/host/startup_box.sh -d "$(TEST_LOG_DIR)/vagrant_$(1)_$(2)" $(VG_TEST_ROOT_DIR)/$1/$2
+endef
+
+# Shutdown Vagrant box
+define shutdown_box # $1: VM provider, $2: Test run type
+	@echo "*** shutdown_box: VM provider: $1, Test run type: $2"
+	@bash $(TEST_DIR)/host/shutdown_box.sh $(VG_TEST_ROOT_DIR)/$1/$2
+endef
+
+# Execute test run tests
+define test_run_tests # $1: VM provider, $2: Test run type
+	@echo "*** test_run_tests: VM provider: $1, Test run type: $2"
+	$(if $(filter $2,clockoffset),
+		$(eval VG_TEST_BOX_RUN_PARAMS = --clockoffset)
+	)
+	$(if $(filter $2,default),
+		$(eval VG_TEST_BOX_RUN_PARAMS = )
+	)
+	@bash $(TEST_DIR)/host/test_box.sh $(VG_TEST_ROOT_DIR)/$1/$2 $(VG_TEST_BOX_RUN_PARAMS)
+endef
+
+# Finish test run
+define test_run_finish # $1: VM provider, $2: Vagrant provider, $3: Test run type
+	@echo "*** test_run_finish: VM provider: $1, Vagrant provider: $2, Test run type: $3"
+	$(call shutdown_box,$1,$3)
+	$(call destroy_box,$1,$3)
+endef

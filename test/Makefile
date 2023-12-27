@@ -2,7 +2,7 @@
 ROOT_DIR := $(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)
 
 # Include common settings
-include $(ROOT_DIR)/build/Makefile.common
+include $(ROOT_DIR)/build/common.mak
 
 # Vagrant text box name prefix
 VG_TEST_BOX_NAME := test-box
@@ -19,7 +19,6 @@ TEST_LOG_DIR := $(LOG_DIR)/test
 # Test run types
 TEST_RUN_TYPES := default clockoffset
 
-
 # Make all
 .PHONY: all
 all: test
@@ -33,13 +32,13 @@ all: test
 ifeq ($(MAKE_VIRTUALBOX),1)
 $(info *** Including VirtualBox test rules ***)
 # Include VirtualBox-specific rules
-include $(TEST_DIR)/Makefile.virtualbox
+include $(TEST_DIR)/virtualbox.mak
 endif
 
 ifeq ($(MAKE_VMWARE),1)
 $(info *** Including VMware test rules ***)
 # Include VMware-specific rules
-include $(TEST_DIR)/Makefile.vmware
+include $(TEST_DIR)/vmware.mak
 endif
 
 # All test runs

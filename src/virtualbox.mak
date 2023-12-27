@@ -1,0 +1,60 @@
+### Connect generic goals to VirtualBox-specific goals
+
+# Build virtual machine
+build: build_vbx
+
+# Package virtual machine
+package: package_vbx
+
+# Remove virtual machine
+remove_vm: remove_vm_vbx
+
+# Clean dist folder
+dist_clean: dist_clean_vbx
+
+# Clean work dir
+work_clean: work_clean_vbx
+
+
+### VirtualBox-specific goals
+
+# Build VirtualBox VM
+.PHONY: build_vbx
+build_vbx: create_vm_vbx install_os_vm_vbx update_vm_vbx
+
+# Create VirtualBox VM
+.PHONY: create_vm_vbx
+create_vm_vbx:
+	@bash $(SRC_DIR)/host/virtualbox/create_vm_vbx.sh $(VM_NAME) $(VM_BASE_DIR)/virtualbox $(VM_OS_TYPE_VBX) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
+
+# Install operating system in VirtualBox VM
+.PHONY: install_os_vm_vbx
+install_os_vm_vbx:
+	@bash $(SRC_DIR)/host/virtualbox/install_os_vm_vbx.sh $(VM_NAME) "$(SRC_DIR)/host/virtualbox/work" "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
+#	@bash $(SRC_DIR)/host/virtualbox/install_os_vm_vbx.sh -d $(SRC_LOG_DIR)/virtualbox $(VM_NAME) "$(SRC_DIR)/host/virtualbox/work" "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
+
+# Update VirtualBox VM after OS install
+.PHONY: update_vm_vbx
+update_vm_vbx:
+	@bash $(SRC_DIR)/host/virtualbox/update_vm_vbx.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(SRC_DIR)/guest $(SRC_DIR)/guest/virtualbox/work $(UPDATE_VM_OPTS)
+
+# Package VirtualBox VM
+.PHONY: package_vbx
+package_vbx:
+	@echo "Packaging VirtualBox VM..."
+	@vagrant package $(VM_NAME) --base $(VM_NAME) --vagrantfile $(SRC_DIR)/package/virtualbox/Vagrantfile.pkg --output $(DIST_DIR)/virtualbox/$(VM_NAME).box
+
+# Remove VirtualBox VM
+.PHONY: PHONY
+remove_vm_vbx:
+	@-bash $(SRC_DIR)/host/virtualbox/remove_vm_vbx.sh $(VM_NAME)
+
+# Remove VirtualBox VM from dist
+.PHONY: dist_clean_vbx
+dist_clean_vbx:
+	@-rm $(DIST_DIR)/virtualbox/*
+
+# Remove work dir
+.PHONY: work_clean_vbx
+work_clean_vbx:
+	@-rm -rf $(SRC_DIR)/guest/virtualbox/work

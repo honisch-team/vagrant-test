@@ -2,7 +2,7 @@
 ROOT_DIR := $(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)
 
 # Include common settings
-include $(ROOT_DIR)/build/Makefile.common
+include $(ROOT_DIR)/build/common.mak
 
 # src log dir
 SRC_LOG_DIR := $(LOG_DIR)/src
@@ -38,11 +38,11 @@ get_install_media:
 # Include VirtualBox-specific rules
 ifeq ($(MAKE_VIRTUALBOX),1)
 $(info *** Including VirtualBox build rules ***)
-include $(SRC_DIR)/Makefile.virtualbox
+include $(SRC_DIR)/virtualbox.mak
 endif
 
 # Include VMware-specific rules
 ifeq ($(MAKE_VMWARE),1)
 $(info *** Including VMware build rules ***)
-include $(SRC_DIR)/Makefile.vmware
+include $(SRC_DIR)/vmware.mak
 endif

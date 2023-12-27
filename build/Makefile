@@ -2,7 +2,7 @@
 ROOT_DIR := $(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)
 
 # Include common settings
-include $(ROOT_DIR)/build/Makefile.common
+include $(ROOT_DIR)/build/common.mak
 
 # Make all
 .PHONY: all

@@ -46,3 +46,26 @@ ifeq ($(MAKE_VMWARE),1)
 $(info *** Including VMware build rules ***)
 include $(SRC_DIR)/vmware.mak
 endif
+
+# Build VM
+# %: VM provider ID (vbx, vmw, ...)
+build.%: create_vm.% install_os_vm.% update_vm.% ;
+
+# Create VM
+# %: VM provider ID (vbx, vmw, ...)
+create_vm.%: VM_PROVIDER_ID = $*
+create_vm.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+create_vm.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	@bash $(SRC_DIR)/host/$(VM_PROVIDER)/create_vm_vbx.sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
+
+
+# Remove VM from dist
+# %: VM provider ID (vbx, vmw, ...)
+dist_clean.%: VM_PROVIDER_ID = $*
+dist_clean.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+dist_clean.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	@-rm $(DIST_DIR)/$(VM_PROVIDER)/*

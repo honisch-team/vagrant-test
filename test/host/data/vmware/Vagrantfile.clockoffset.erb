@@ -1,3 +1,6 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
 Vagrant.configure("2") do |config|
   config.vm.box = "<%= box_name %>"
   <% if box_version -%>
@@ -11,8 +14,10 @@ Vagrant.configure("2") do |config|
   config.winrm.transport = :plaintext
   config.winrm.basic_auth_only = true
 
-  # Modify VM 
+  # Provider-specific
   config.vm.provider "vmware_desktop" do |v|
+    # Create a linked clone
+    v.linked_clone = true
     # Clock offset +1 year
     v.vmx['rtc.diffFromUTC'] = '31536000'
     # Disable time sync between host and guest

@@ -10,8 +10,8 @@ VM_INSTALL_MEDIA_FILE := en_windows_7_enterprise_with_sp1_x86_dvd_u_677710.iso
 VM_INSTALL_MEDIA_SHA1 := 4e0450ac73ab6f9f755eb422990cd9c7a1f3509c
 
 # Operating system, virtual hardware etc.
-VM_OS_TYPE_VBX  := Windows7
-VM_OS_TYPE_VMW  := windows7
+VM_OS_TYPE.vbx  := Windows7
+VM_OS_TYPE.vmw  := windows7
 VM_HOSTNAME     := win7x86
 VM_CPU_COUNT    := 2
 VM_RAM_MB       := 2048

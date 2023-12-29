@@ -19,9 +19,6 @@ TEST_LOG_DIR := $(LOG_DIR)/test
 # Test run IDs
 TESTRUN_ID_LIST := default clockoffset
 
-# VM provider IDs
-VM_PROVIDER_ID_LIST := vbx vmw
-
 # Make all
 .PHONY: all
 all: test
@@ -65,6 +62,8 @@ clean_test_logs.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
 clean_test_logs.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
 clean_test_logs.%:
 	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	$(call check_valid_testrun_id,$(TESTRUN_ID))
 	@-rm -rf "$(TEST_LOG_DIR)/vagrant_$(VM_PROVIDER)_$(TESTRUN_ID)"
 
 # Test run for given provider and test run ID
@@ -84,6 +83,8 @@ testrun_tests.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
 testrun_tests.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
 testrun_tests.%:
 	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	$(call check_valid_testrun_id,$(TESTRUN_ID))
 	$(if $(filter $(TESTRUN_ID),clockoffset), \
 		$(eval VG_TEST_BOX_RUN_PARAMS = --clockoffset) \
 	)
@@ -103,6 +104,7 @@ install_box.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
 install_box.%: VG_PROVIDER = $(VG_PROVIDER.$(VM_PROVIDER_ID))
 install_box.%:
 	@echo "*** $@: VM provider: $(VM_PROVIDER), Vagrant provider: $(VG_PROVIDER)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
 	@bash $(TEST_DIR)/host/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(VM_PROVIDER)/$(VM_NAME).box $(VG_PROVIDER)
 
 # Remove Vagrant box for given VM provider
@@ -111,6 +113,7 @@ remove_box.%: VM_PROVIDER_ID = $*
 remove_box.%: VG_PROVIDER = $(VG_PROVIDER.$(VM_PROVIDER_ID))
 remove_box.%:
 	@echo "*** $@: Vagrant provider: $(VG_PROVIDER)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
 	@-bash $(TEST_DIR)/host/remove_box.sh $(VG_TEST_BOX_NAME) $(VG_PROVIDER)
 
 # Initialize Vagrant box instance for given provider and test run ID
@@ -164,11 +167,6 @@ shutdown_box.%:
 	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
 	$(call check_valid_testrun_id,$(TESTRUN_ID))
 	@bash $(TEST_DIR)/host/shutdown_box.sh $(VG_TEST_ROOT_DIR)/$(VM_PROVIDER)/$(TESTRUN_ID)
-
-# Check whether given VM provider ID is valid
-define check_valid_vm_provider_id # $1: VM provider ID
-	$(if $(filter $1,$(VM_PROVIDER_ID_LIST)),,$(error *** Error: Unkonwn VM provider ID: $1))
-endef
 
 # Check whether given testrun ID is valid
 define check_valid_testrun_id # $1: VM provider ID

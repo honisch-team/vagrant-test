@@ -28,6 +28,14 @@ VM_BASE_DIR := $(abspath $(ROOT_DIR)/vm-base)
 # Root dir for Vagrant test environments
 VG_TEST_ROOT_DIR := $(ROOT_DIR)/vagrant-test-env
 
+# VM provider IDs
+VM_PROVIDER_ID_LIST := vbx vmw
+
+# VM provider names
+VM_PROVIDER.vbx := virtualbox
+VM_PROVIDER.vmw := vmware
+
+
 # Check whether VirtualBox is installed
 ifndef MAKE_VIRTUALBOX
 ifneq ($(shell which vboxmanage),)
@@ -51,3 +59,7 @@ endif
 # Include config settings
 include $(ROOT_DIR)/build/config.mak
 
+# Check whether given VM provider ID is valid
+define check_valid_vm_provider_id # $1: VM provider ID
+	$(if $(filter $1,$(VM_PROVIDER_ID_LIST)),,$(error *** Error: Unkonwn VM provider ID: $1))
+endef

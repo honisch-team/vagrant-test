@@ -86,6 +86,11 @@ jobs:
     needs: build-and-test
     if: failure()
     steps:
+      # Check out
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Rerun failed jobs
       - name: Rerun failed jobs in the current workflow
         env:
           GH_TOKEN: ${{ github.token }}

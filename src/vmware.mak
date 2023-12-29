@@ -18,14 +18,14 @@ work_clean: work_clean.vmw
 
 ### VMware-specific goals
 
-# Install operating system in VMware VM
-.PHONY: install_os_vm.vmw
-install_os_vm.vmw: | create_vm.vmw
+# Install operating system in VMware VM (no prerequisites)
+.PHONY: install_os_vm_nodeps.vmw
+install_os_vm_nodeps.vmw: create_vm.vmw
 	@bash $(SRC_DIR)/host/vmware/install_os_vm_vmw.sh $(VM_NAME) "$(VM_BASE_DIR)/vmware" "$(SRC_DIR)/host/vmware/work" "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_HOSTNAME) $(VM_USER) $(VM_PASSWORD)
 
-# Update VMware VM after OS install
-.PHONY: update_vm.vmw
-update_vm.vmw: | install_os_vm.vmw
+# Update VMware VM after OS install (no prerequisites)
+.PHONY: update_vm_nodeps.vmw
+update_vm_nodeps.vmw: install_os_vm.vmw
 	@bash $(SRC_DIR)/host/vmware/update_vm_vmw.sh $(VM_NAME) "$(VM_BASE_DIR)/vmware" $(VM_USER) $(VM_PASSWORD) $(SRC_DIR)/guest $(SRC_DIR)/guest/vmware/work $(UPDATE_VM_OPTS)
 
 # Package VMware VM

@@ -49,16 +49,25 @@ endif
 
 # Build VM
 # %: VM provider ID (vbx, vmw, ...)
-build.%: create_vm.% install_os_vm.% update_vm.% ;
+build.%: update_vm.% ;
+
+# Update VM
+update_vm.%: install_os_vm.% update_vm_nodeps.% ;
+
+# Install OS in VM
+install_os_vm.%: create_vm.% install_os_vm_nodeps.% ;
 
 # Create VM
+create_vm.%: create_vm_nodeps.% ;
+
+# Create VM (no prerequisites)
 # %: VM provider ID (vbx, vmw, ...)
-create_vm.%: VM_PROVIDER_ID = $*
-create_vm.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
-create_vm.%:
+create_vm_nodeps.%: VM_PROVIDER_ID = $*
+create_vm_nodeps.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+create_vm_nodeps.%:
 	@echo "*** $@: VM provider: $(VM_PROVIDER)"
 	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
-	@bash $(SRC_DIR)/host/$(VM_PROVIDER)/create_vm_vbx.sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
+	@bash $(SRC_DIR)/host/$(VM_PROVIDER)/create_vm_$(VM_PROVIDER_ID).sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
 
 
 # Remove VM from dist

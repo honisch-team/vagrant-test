@@ -65,15 +65,16 @@ destroyBox() {
 start_box() (
   set -euo pipefail
   local VG_DIR=$1
-  local DEBUG_LOG_DIR=$2
-  local VG_UP_PARAMS=${3:-}
+  local BOX_PROVIDER=$2
+  local DEBUG_LOG_DIR=$3
+  local VG_UP_PARAMS=${4:-}
 
   # Change to vagrant dir
   cd $VG_DIR
 
   local MAX_ATTEMPTS=10
   echo "****************"
-  echo "*** Starting vagrant box"
+  echo "*** Starting vagrant box with provider \"$BOX_PROVIDER\"..."
   echo "****************"
   local EXIT_CODE=0
 
@@ -90,9 +91,9 @@ start_box() (
     EXIT_CODE=0
 
     if [ -z "$DEBUG_LOG_DIR" ] ; then
-      vagrant up $VG_UP_PARAMS || EXIT_CODE=$?
+      vagrant up --provider $BOX_PROVIDER $VG_UP_PARAMS || EXIT_CODE=$?
     else
-      vagrant up --debug $VG_UP_PARAMS 2>> "$DEBUG_LOG_DIR/vagrant_up_$(timestamp).log" || EXIT_CODE=$?
+      vagrant up --provider $BOX_PROVIDER --debug $VG_UP_PARAMS 2>> "$DEBUG_LOG_DIR/vagrant_up_$(timestamp).log" || EXIT_CODE=$?
     fi
 
     # Exit if launch successful

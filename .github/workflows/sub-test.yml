@@ -57,7 +57,7 @@ jobs:
 
       # Test Vagrant box
       - name: Test Vagrant box
-        run: make -f ./test/Makefile test_run_${{inputs.test-run-id}} VM_PROVIDER=${{inputs.virt-provider-name}}
+        run: make -f ./test/Makefile testrun.${{inputs.virt-provider-id}}.${{inputs.test-run-id}}
 
       # Upload logs
       - name: Upload logs

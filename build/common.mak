@@ -1,5 +1,12 @@
 ### Common Makefile settings
 
+# Enable secondary expansion
+.SECONDEXPANSION:
+
+# Helpers
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+
 # src dir
 SRC_DIR := $(ROOT_DIR)/src
 

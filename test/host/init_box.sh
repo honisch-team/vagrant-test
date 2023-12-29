@@ -19,11 +19,12 @@ source $SCRIPT_DIR/common.sh
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTIONS] BOX_NAME TEST_DIR RES_DIR\n"
+  echo -e "Usage: $0 [OPTIONS] BOX_NAME TEST_DIR RES_DIR PROVIDER\n"
   echo "Install Vagrant box file"
   echo "BOX_NAME:  Name for Vagrant box"
   echo "TEST_DIR:  Vagrant test environment dir"
   echo "RES_DIR:   Dir containing test resources to be copied to TEST_DIR"
+  echo "PROVIDER:  Vagrant provider"
   echo ""
   echo "Options:"
   echo "  -h, --help                display this help and exit"
@@ -73,7 +74,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 3 ] ; then
+if [ $# -ne 4 ] ; then
   display_usage
   exit 1
 fi
@@ -82,12 +83,14 @@ fi
 VG_BOX_NAME=$1
 VG_TEST_DIR=$2
 VG_RES_DIR=$3
+VG_PROVIDER=$4
 
 echo "**************************************"
 echo "*** Initialize Vagrant box \"$VG_BOX_NAME\""
 echo "**************************************"
 echo "Test environment dir: $VG_TEST_DIR"
 echo "Test resources dir: $VG_RES_DIR"
+echo "Provider: $VG_PROVIDER"
 if [ "$OPT_VAGRANT_FILE" != "" ] ; then
   echo "Vagrantfile template: $OPT_VAGRANT_FILE"
 fi
@@ -116,7 +119,7 @@ cp "$VG_RES_DIR/"* "$VG_TEST_DIR"
 # Disable Windows time sync
 if [ $OPT_NO_WIN_TIME_SYNC -eq 1 ] ; then
   echo "Disable Windows time sync: Start VM"
-  start_box $VG_TEST_DIR "" "--no-provision"
+  start_box $VG_TEST_DIR $VG_PROVIDER "" "--no-provision"
   echo "Disable Windows time sync: Modify registry"
   (cd $VG_TEST_DIR && vagrant winrm --shell cmd --command "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\W32Time\\Parameters\" /v Type /t REG_SZ /d NoSync /f")
   echo "Disable Windows time sync: Stop box"

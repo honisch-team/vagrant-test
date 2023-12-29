@@ -16,8 +16,11 @@ TEST_RES_DIR := $(TEST_DIR)/guest
 # Test log dir
 TEST_LOG_DIR := $(LOG_DIR)/test
 
-# Test run types
-TEST_RUN_TYPES := default clockoffset
+# Test run IDs
+TESTRUN_ID_LIST := default clockoffset
+
+# VM provider IDs
+VM_PROVIDER_ID_LIST := vbx vmw
 
 # Make all
 .PHONY: all
@@ -41,100 +44,134 @@ $(info *** Including VMware test rules ***)
 include $(TEST_DIR)/vmware.mak
 endif
 
-# All test runs
-define testrun_all # $1: VM provider, $2: Vagrant provider
-	@echo "*** testrun_all: VM provider: $1, Vagrant provider: $2"
-	$(foreach test_run_type,$(TEST_RUN_TYPES),
-		$(call testrun,$1,$2,$(test_run_type))
+# Exec test for given VM provider
+# %: VM provider ID (vbx, vmw, ...)
+test.%: install_box.% $$(addprefix testrun.%.,$(TESTRUN_ID_LIST)) ;
+
+# Clean for given VM provider
+# %: VM provider ID (vbx, vmw, ...)
+clean.%: $$(addprefix clean_testrun.%.,$(TESTRUN_ID_LIST)) remove_box.% ;
+
+# Clean for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+clean_testrun.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+clean_testrun.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+clean_testrun.%: destroy_box.% clean_test_logs.% ;
+
+# Clean test logs for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+clean_test_logs.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+clean_test_logs.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+clean_test_logs.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+clean_test_logs.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	@-rm -rf "$(TEST_LOG_DIR)/vagrant_$(VM_PROVIDER)_$(TESTRUN_ID)"
+
+# Test run for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+testrun.%: testrun_init.% testrun_tests.% testrun_finish.% ;
+
+# Initialize test run for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+testrun_init.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+testrun_init.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+testrun_init.%: install_box.$$(VM_PROVIDER_ID) init_box.% startup_box.% ;
+
+# Execute test run tests for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+testrun_tests.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+testrun_tests.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+testrun_tests.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+testrun_tests.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(if $(filter $(TESTRUN_ID),clockoffset), \
+		$(eval VG_TEST_BOX_RUN_PARAMS = --clockoffset) \
 	)
-endef
-
-# Clean all testruns
-define clean_all # $1: VM provider, $2: Vagrant provider
-	@echo "*** clean_all: VM provider: $1, Vagrant provider: $2"
-	$(foreach test_run_type,$(TEST_RUN_TYPES),
-		$(call destroy_box,$1,$(test_run_type))
-		$(call clean_test_logs,$1,$(test_run_type))
+	$(if $(filter $(TESTRUN_ID),default), \
+		$(eval VG_TEST_BOX_RUN_PARAMS = ) \
 	)
-	$(call remove_box,$2)
-endef
+	@bash $(TEST_DIR)/host/test_box.sh $(VG_TEST_ROOT_DIR)/$(VM_PROVIDER)/$(TESTRUN_ID) $(VG_TEST_BOX_RUN_PARAMS)
 
-# Clean test logs
-define clean_test_logs # $1: VM provider, $2: Test run type
-	@-rm -rf "$(TEST_LOG_DIR)/vagrant_$(1)_$(2)"
-endef
+# Finish test run for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+testrun_finish.%: shutdown_box.% ;
 
-# Single test run
-define testrun # $1: VM provider, $2: Vagrant provider, $3: Test run type
-	@echo "*** testrun: VM provider: $1, Vagrant provider: $2, Test run type: $3"
-	$(call test_run_init,$1,$2,$3)
-	$(call test_run_tests,$1,$3)
-	$(call test_run_finish,$1,$2,$3)
-endef
+# Install Vagrant box for given VM provider
+# %: VM provider ID (vbx, vmw, ...)
+install_box.%: VM_PROVIDER_ID = $*
+install_box.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+install_box.%: VG_PROVIDER = $(VG_PROVIDER.$(VM_PROVIDER_ID))
+install_box.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), Vagrant provider: $(VG_PROVIDER)"
+	@bash $(TEST_DIR)/host/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(VM_PROVIDER)/$(VM_NAME).box $(VG_PROVIDER)
 
-# Initialize test run
-define test_run_init # $1: VM provider, $2: Vagrant provider, $3: Test run type
-	@echo "*** testrun_init: VM provider: $1, Vagrant provider: $2, Test run type: $3"
-	$(call install_box,$1,$2)
-	$(call init_box,$1,$3)
-	$(call startup_box,$1,$3)
-endef
+# Remove Vagrant box for given VM provider
+# %: VM provider ID (vbx, vmw, ...)
+remove_box.%: VM_PROVIDER_ID = $*
+remove_box.%: VG_PROVIDER = $(VG_PROVIDER.$(VM_PROVIDER_ID))
+remove_box.%:
+	@echo "*** $@: Vagrant provider: $(VG_PROVIDER)"
+	@-bash $(TEST_DIR)/host/remove_box.sh $(VG_TEST_BOX_NAME) $(VG_PROVIDER)
 
-# Install Vagrant box
-define install_box # $1: VM provider, $2: Vagrant provider
-	@bash $(TEST_DIR)/host/install_box.sh $(VG_TEST_BOX_NAME) $(DIST_DIR)/$(1)/$(VM_NAME).box $(2)
-endef
-
-# Remove Vagrant box
-define remove_box # $1: Vagrant provider
-	@-bash $(TEST_DIR)/host/remove_box.sh $(VG_TEST_BOX_NAME) $(1)
-endef
-
-# Initialize Vagrant box instance
-define init_box # $1: VM provider, $2: Test run type
-	@echo "*** init_box: VM provider: $1, Test run type: $2"
-	$(if $(filter $2,clockoffset),
-		$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(1)/Vagrantfile.clockoffset.erb --no-win-time-sync)
+# Initialize Vagrant box instance for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+init_box.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+init_box.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+init_box.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+init_box.%: VG_PROVIDER = $(VG_PROVIDER.$(VM_PROVIDER_ID))
+init_box.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	$(call check_valid_testrun_id,$(TESTRUN_ID))
+	$(if $(filter $(TESTRUN_ID),clockoffset), \
+		$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.clockoffset.erb --no-win-time-sync) \
 	)
-	$(if $(filter $2,default),
-		$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(1)/Vagrantfile.erb)
+	$(if $(filter $(TESTRUN_ID),default), \
+		$(eval VG_TEST_BOX_INIT_PARAMS = --vagrantfile $(TEST_DATA_DIR)/$(VM_PROVIDER)/Vagrantfile.erb) \
 	)
-	bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_ROOT_DIR)/$1/$2 $(TEST_RES_DIR) $(VG_TEST_BOX_INIT_PARAMS)
+	@bash $(TEST_DIR)/host/init_box.sh $(VG_TEST_BOX_NAME) $(VG_TEST_ROOT_DIR)/$(VM_PROVIDER)/$(TESTRUN_ID) $(TEST_RES_DIR) $(VG_PROVIDER) $(VG_TEST_BOX_INIT_PARAMS)
+
+# Destroy Vagrant box for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+destroy_box.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+destroy_box.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+destroy_box.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+destroy_box.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	$(call check_valid_testrun_id,$(TESTRUN_ID))
+	@-bash $(TEST_DIR)/host/destroy_box.sh $(VG_TEST_ROOT_DIR)/$(VM_PROVIDER)/$(TESTRUN_ID)
+
+# Startup Vagrant box for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+startup_box.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+startup_box.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+startup_box.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+startup_box.%: VG_PROVIDER = $(VG_PROVIDER.$(VM_PROVIDER_ID))
+startup_box.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	$(call check_valid_testrun_id,$(TESTRUN_ID))
+	@bash $(TEST_DIR)/host/startup_box.sh -d "$(TEST_LOG_DIR)/vagrant_$(VM_PROVIDER)_$(TESTRUN_ID)" $(VG_TEST_ROOT_DIR)/$(VM_PROVIDER)/$(TESTRUN_ID) $(VG_PROVIDER)
+
+# Shutdown Vagrant box for given provider and test run ID
+# %: [VM Provider ID (vbx, vmw...)].[Test run ID (see TESTRUN_ID_LIST)]
+shutdown_box.%: VM_PROVIDER_ID = $(word 1,$(subst .,$(SPACE),$*))
+shutdown_box.%: TESTRUN_ID = $(word 2,$(subst .,$(SPACE),$*))
+shutdown_box.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
+shutdown_box.%:
+	@echo "*** $@: VM provider: $(VM_PROVIDER), test run ID: $(TESTRUN_ID)"
+	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
+	$(call check_valid_testrun_id,$(TESTRUN_ID))
+	@bash $(TEST_DIR)/host/shutdown_box.sh $(VG_TEST_ROOT_DIR)/$(VM_PROVIDER)/$(TESTRUN_ID)
+
+# Check whether given VM provider ID is valid
+define check_valid_vm_provider_id # $1: VM provider ID
+	$(if $(filter $1,$(VM_PROVIDER_ID_LIST)),,$(error *** Error: Unkonwn VM provider ID: $1))
 endef
 
-# Destroy Vagrant box
-define destroy_box # $1: VM provider, $2: Test run type
-	@echo "*** destroy_box: VM provider: $1, Test run type: $2"
-	@-bash $(TEST_DIR)/host/destroy_box.sh $(VG_TEST_ROOT_DIR)/$1/$2
+# Check whether given testrun ID is valid
+define check_valid_testrun_id # $1: VM provider ID
+	$(if $(filter $1,$(TESTRUN_ID_LIST)),,$(error *** Error: Unkonwn test run ID: $1))
 endef
 
-# Startup Vagrant box
-define startup_box # $1: VM provider, $2: Test run type
-	@echo "*** startup_box: VM provider: $1, Test run type: $2"
-	@bash $(TEST_DIR)/host/startup_box.sh -d "$(TEST_LOG_DIR)/vagrant_$(1)_$(2)" $(VG_TEST_ROOT_DIR)/$1/$2
-endef
-
-# Shutdown Vagrant box
-define shutdown_box # $1: VM provider, $2: Test run type
-	@echo "*** shutdown_box: VM provider: $1, Test run type: $2"
-	@bash $(TEST_DIR)/host/shutdown_box.sh $(VG_TEST_ROOT_DIR)/$1/$2
-endef
-
-# Execute test run tests
-define test_run_tests # $1: VM provider, $2: Test run type
-	@echo "*** test_run_tests: VM provider: $1, Test run type: $2"
-	$(if $(filter $2,clockoffset),
-		$(eval VG_TEST_BOX_RUN_PARAMS = --clockoffset)
-	)
-	$(if $(filter $2,default),
-		$(eval VG_TEST_BOX_RUN_PARAMS = )
-	)
-	@bash $(TEST_DIR)/host/test_box.sh $(VG_TEST_ROOT_DIR)/$1/$2 $(VG_TEST_BOX_RUN_PARAMS)
-endef
-
-# Finish test run
-define test_run_finish # $1: VM provider, $2: Vagrant provider, $3: Test run type
-	@echo "*** test_run_finish: VM provider: $1, Vagrant provider: $2, Test run type: $3"
-	$(call shutdown_box,$1,$3)
-	$(call destroy_box,$1,$3)
-endef

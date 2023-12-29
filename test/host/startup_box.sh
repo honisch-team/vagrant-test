@@ -18,9 +18,10 @@ source $SCRIPT_DIR/common.sh
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTIONS] TEST_DIR\n"
+  echo -e "Usage: $0 [OPTIONS] TEST_DIR PROVIDER\n"
   echo "Startup Vagrant box"
   echo "TEST_DIR:  Vagrant test environment dir"
+  echo "PROVIDER:  Vagrant provider"
   echo ""
   echo "Options:"
   echo "  -h, --help            display this help and exit"
@@ -64,22 +65,25 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 1 ] ; then
+if [ $# -ne 2 ] ; then
   display_usage
   exit 1
 fi
 
 # Read params
 VG_TEST_DIR=$1
+VG_PROVIDER=$2
 
 echo "**************************************"
 echo "*** Starting Vagrant box in \"$VG_TEST_DIR\""
 echo "**************************************"
+echo "Provider: $VG_PROVIDER"
 if [ "$OPT_DEBUG_LOG" != "" ] ; then
   echo "Debug log dir: $OPT_DEBUG_LOG"
 fi
+echo ""
 
 # Start box
-start_box $VG_TEST_DIR "$OPT_DEBUG_LOG"
+start_box $VG_TEST_DIR $VG_PROVIDER "$OPT_DEBUG_LOG"
 
 echo "Done"

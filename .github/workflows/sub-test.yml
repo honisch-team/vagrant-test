@@ -57,6 +57,7 @@ jobs:
 
       # Test Vagrant box
       - name: Test Vagrant box
+        timeout-minutes: 20
         run: make -f ./test/Makefile testrun.${{inputs.virt-provider-id}}.${{inputs.test-run-id}}
 
       # Upload logs

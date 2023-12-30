@@ -9,16 +9,11 @@ BOX_LOG_DIR := $(LOG_DIR)/box
 
 # Make all
 .PHONY: all
-all: get_install_media build package
+all: build package
 
 # Clean all (except install media)
 .PHONY: clean
 clean: remove_vm dist_clean work_clean
-
-# Get install media
-.PHONY: get_install_media
-get_install_media:
-	@bash $(BOX_DIR)/host/common/get_install_media.sh $(VM_INSTALL_MEDIA_URL) "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_INSTALL_MEDIA_SHA1)
 
 # Build virtual machine
 .PHONY: build

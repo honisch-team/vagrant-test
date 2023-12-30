@@ -5,9 +5,7 @@ VM_NAME         := win7sp1-ent-x86-enu
 VM_DESCRIPTION  := Windows 7 SP1 Enterprise x86 EN-US
 
 # Install media
-VM_INSTALL_MEDIA_URL  := https://archive.org/download/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710_202006/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710.iso
-VM_INSTALL_MEDIA_FILE := en_windows_7_enterprise_with_sp1_x86_dvd_u_677710.iso
-VM_INSTALL_MEDIA_SHA1 := 4e0450ac73ab6f9f755eb422990cd9c7a1f3509c
+VM_INSTALL_MEDIA_FILE := en_windows_7_enterprise_custom.iso
 
 # Operating system, virtual hardware etc.
 VM_OS_TYPE.vbx  := Windows7

@@ -8,53 +8,75 @@ run-name: Build ${{github.run_id}}
 on: [push, workflow_dispatch]
 
 jobs:
-  # Cache installation media
-  cache-install-media:
-    runs-on: macos-12
+  # Create install media
+  create-install-media:
+    runs-on: windows-2022
     timeout-minutes: 60
     steps:
       # Check out
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Upgrade Mac OS tools
-      - name: Upgrade Mac OS tools
+      # Determine cache keys
+      - name: Get cache keys
+        id: get-cache-keys
+        shell: pwsh
         run: |
-          brew install bash
-          brew install gnu-sed
-          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+          ## Get cache key for downloads cache
+          $hash = ./install-media/get_downloads_hash.ps1 ./install-media/downloads.csv
+          echo "downloads-cache-key=$hash" >> $env:GITHUB_OUTPUT
 
-      # Set Github environment variables
-      - name: Set Github environment variables
-        run: make -f ./build/Makefile set_github_vars
-
-      # Check for cached install media
-      - name: "Check for cached install media image: ${{env.VM_INSTALL_MEDIA_FILE}}"
-        id: check-cache
+      # Get cached install files
+      - name: Get cached install files
+        id: get-cached-files
         uses: actions/cache/restore@v3
         with:
-          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
-          path: ./install-media
+          key: install-media-downloads
+          path: ./install-media/download
           lookup-only: true
 
-      # Download install media if no cache hit
-      - name: "Downloading install media: ${{env.VM_INSTALL_MEDIA_FILE}}"
-        if: steps.check-cache.outputs.cache-hit != 'true'
-        run: make -f ./build/Makefile get_install_media
+      # Get install files
+      - name: Get install files
+        id: get-install-files
+        shell: pwsh
+        run: |
+          ./install-media/create_install_media.ps1 -DownloadOnly
+          if ($LASTEXITCODE -eq 10) {
+            echo 'New files were downloaded => cache needs to be updated'
+            echo 'download-occurred=true' >> $env:GITHUB_OUTPUT
+            exit 0
+          }
 
-      # Store install media in cache if no cache hit
-      - name: "Store install media in cache"
-        if: steps.check-cache.outputs.cache-hit != 'true'
+      # Save install files to cache if updated
+      - name: Save install files to cache if updated
+        if: steps.get-install-files.outputs.download-occurred == 'true'
         uses: actions/cache/save@v3
         with:
-          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
-          path: ./install-media
+          key: install-media-downloads
+          path: ./install-media/download
+
+      # Install Windows ADK deployment tools
+      #- name: Install Windows ADK deployment tools
+      #  shell: pwsh
+      #  run: |
+      #    ./build/github_build_helper.ps1 -InstallAdkDeploymentTools
+      #    if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      #    echo "Adding Oscdimg dir to PATH:"
+      #    echo "${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+
+      # Generate custom install image
+      #- name: Generate custom install image
+      #  shell: pwsh
+      #  run: ./install-media/create_install_media.ps1 -SkipDownload
+
+      # Upload custom install image artifact
 
 
   # Build and test Vagrant box
   build-and-test:
     # Run after cache-install-media
-    needs: cache-install-media
+    needs: create-install-media
 
     # Build using different virtualization providers
     strategy:
@@ -81,17 +103,17 @@ jobs:
 
 
   # Rerun failed jobs
-  rerun-failed-jobs:
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: failure()
-    steps:
-      # Check out
-      - name: Checkout
-        uses: actions/checkout@v4
+  #rerun-failed-jobs:
+  #  runs-on: ubuntu-latest
+  #  needs: build-and-test
+  #  if: failure()
+  #  steps:
+  #    # Check out
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
 
-      # Rerun failed jobs
-      - name: Rerun failed jobs in the current workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run rerun ${{ github.run_id }} --failed
+  #    # Rerun failed jobs
+  #    - name: Rerun failed jobs in the current workflow
+  #      env:
+  #        GH_TOKEN: ${{ github.token }}
+  #      run: gh run rerun ${{ github.run_id }} --failed

@@ -1,0 +1,4 @@
+Comment;Url;Hash
+# Lines starting with hash are ignored
+Installer ISO;https://archive.org/download/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710_202006/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710.iso;4e0450ac73ab6f9f755eb422990cd9c7a1f3509c
+Something else;https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu;82e168117c23f7c479a97ee96c82af788d07452e

@@ -4,8 +4,8 @@ ROOT_DIR := $(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)
 # Include common settings
 include $(ROOT_DIR)/build/common.mak
 
-# src log dir
-SRC_LOG_DIR := $(LOG_DIR)/src
+# box log dir
+BOX_LOG_DIR := $(LOG_DIR)/box
 
 # Make all
 .PHONY: all
@@ -18,7 +18,7 @@ clean: remove_vm dist_clean work_clean
 # Get install media
 .PHONY: get_install_media
 get_install_media:
-	@bash $(SRC_DIR)/host/common/get_install_media.sh $(VM_INSTALL_MEDIA_URL) "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_INSTALL_MEDIA_SHA1)
+	@bash $(BOX_DIR)/host/common/get_install_media.sh $(VM_INSTALL_MEDIA_URL) "$(INSTALL_MEDIA_DIR)/$(VM_INSTALL_MEDIA_FILE)" $(VM_INSTALL_MEDIA_SHA1)
 
 # Build virtual machine
 .PHONY: build
@@ -38,13 +38,13 @@ get_install_media:
 # Include VirtualBox-specific rules
 ifeq ($(MAKE_VIRTUALBOX),1)
 $(info *** Including VirtualBox build rules ***)
-include $(SRC_DIR)/virtualbox.mak
+include $(BOX_DIR)/virtualbox.mak
 endif
 
 # Include VMware-specific rules
 ifeq ($(MAKE_VMWARE),1)
 $(info *** Including VMware build rules ***)
-include $(SRC_DIR)/vmware.mak
+include $(BOX_DIR)/vmware.mak
 endif
 
 # Build VM
@@ -67,7 +67,7 @@ create_vm_nodeps.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
 create_vm_nodeps.%:
 	@echo "*** $@: VM provider: $(VM_PROVIDER)"
 	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
-	@bash $(SRC_DIR)/host/$(VM_PROVIDER)/create_vm_$(VM_PROVIDER_ID).sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
+	@bash $(BOX_DIR)/host/$(VM_PROVIDER)/create_vm_$(VM_PROVIDER_ID).sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
 
 
 # Remove VM from dist

@@ -57,17 +57,17 @@ jobs:
       # Create VM and install OS
       - name: Create VM and install OS
         timeout-minutes: 60
-        run: make -f ./src/Makefile install_os_vm.${{inputs.virt-provider-id}}
+        run: make -f ./box/Makefile install_os_vm.${{inputs.virt-provider-id}}
 
       # Update VM
       - name: Update VM
         timeout-minutes: 300
-        #run: make -f ./src/Makefile update_vm_nodeps.${{inputs.virt-provider-id}}
-        run: make -f ./src/Makefile update_vm_nodeps.${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
+        #run: make -f ./box/Makefile update_vm_nodeps.${{inputs.virt-provider-id}}
+        run: make -f ./box/Makefile update_vm_nodeps.${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
 
       # Package box
       - name: Build Vagrant box
-        run: make -f ./src/Makefile package.${{inputs.virt-provider-id}}
+        run: make -f ./box/Makefile package.${{inputs.virt-provider-id}}
 
       # Upload Dist artifact
       - name: Upload Dist artifact

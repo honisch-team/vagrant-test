@@ -7,8 +7,8 @@
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 
-# src dir
-SRC_DIR := $(ROOT_DIR)/src
+# box dir
+BOX_DIR := $(ROOT_DIR)/box
 
 # test dir
 TEST_DIR := $(ROOT_DIR)/test

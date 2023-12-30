@@ -25,12 +25,12 @@ install_os_vm_nodeps.vmw: create_vm.vmw
 
 # Update VMware VM after OS install (no prerequisites)
 .PHONY: update_vm_nodeps.vmw
-update_vm_nodeps.vmw: install_os_vm.vmw
+update_vm_nodeps.vmw:
 	@bash $(BOX_DIR)/host/vmware/update_vm_vmw.sh $(VM_NAME) "$(VM_BASE_DIR)/vmware" $(VM_USER) $(VM_PASSWORD) $(BOX_DIR)/guest $(BOX_DIR)/guest/vmware/work $(UPDATE_VM_OPTS)
 
-# Package VMware VM
-.PHONY: package.vmw
-package.vmw:
+# Package VMware VM (no prerequisites)
+.PHONY: package_nodeps.vmw
+package_nodeps.vmw:
 	@bash $(BOX_DIR)/package/vmware/package_vm_vmw.sh $(VM_NAME) "$(VM_BASE_DIR)/vmware" $(BOX_DIR)/package/vmware/Vagrantfile.pkg "$(BOX_DIR)/package/vmware/work" $(DIST_DIR)/vmware/$(VM_NAME).box
 
 # Remove VMware VM

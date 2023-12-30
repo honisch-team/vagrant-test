@@ -67,7 +67,7 @@ jobs:
 
       # Package box
       - name: Build Vagrant box
-        run: make -f ./box/Makefile package.${{inputs.virt-provider-id}}
+        run: make -f ./box/Makefile package_nodeps.${{inputs.virt-provider-id}}
 
       # Upload Dist artifact
       - name: Upload Dist artifact

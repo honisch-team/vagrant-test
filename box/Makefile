@@ -51,14 +51,17 @@ endif
 # %: VM provider ID (vbx, vmw, ...)
 build.%: update_vm.% ;
 
-# Update VM
-update_vm.%: install_os_vm.% update_vm_nodeps.% ;
+# Create VM
+create_vm.%: create_vm_nodeps.% ;
 
 # Install OS in VM
 install_os_vm.%: create_vm.% install_os_vm_nodeps.% ;
 
-# Create VM
-create_vm.%: create_vm_nodeps.% ;
+# Update VM
+update_vm.%: install_os_vm.% update_vm_nodeps.% ;
+
+# Package VM
+package.%: update_vm.% package_nodeps.% ;
 
 # Create VM (no prerequisites)
 # %: VM provider ID (vbx, vmw, ...)

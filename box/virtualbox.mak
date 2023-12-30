@@ -29,9 +29,9 @@ install_os_vm_nodeps.vbx: create_vm.vbx
 update_vm_nodeps.vbx:
 	@bash $(BOX_DIR)/host/virtualbox/update_vm_vbx.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(BOX_DIR)/guest $(BOX_DIR)/guest/virtualbox/work $(UPDATE_VM_OPTS)
 
-# Package VirtualBox VM
-.PHONY: package.vbx
-package.vbx: install_os_vm.vbx
+# Package VirtualBox VM (no prerequisites)
+.PHONY: package_nodeps.vbx
+package_nodeps.vbx:
 	@echo "Packaging VirtualBox VM..."
 	@vagrant package $(VM_NAME) --base $(VM_NAME) --vagrantfile $(BOX_DIR)/package/virtualbox/Vagrantfile.pkg --output $(DIST_DIR)/virtualbox/$(VM_NAME).box
 

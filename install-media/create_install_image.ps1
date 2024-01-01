@@ -112,7 +112,7 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath) 
         $wimIsMounted = $true
 
         # Update image
-        UpdateImage $wimMountDir
+        #UpdateImage $wimMountDir
 
         # Wait for unmount
         if ($PauseBeforeWimUnmount) {

@@ -55,8 +55,17 @@ jobs:
 
       # Create VM and install OS
       - name: Create VM and install OS
+        id: install-os
         timeout-minutes: 60
+        continue-on-error: true
         run: make -f ./box/Makefile install_os_vm.${{inputs.virt-provider-id}}
+
+      # Get logs
+      - name: Get VM logs
+        if: steps.install-os.outcome != 'success'
+        run: |
+          echo "Outcome of previous step: ${{steps.install-os.outcome}}"
+          exit 1
 
       # Update VM
       - name: Update VM

@@ -103,9 +103,9 @@ echo *** Disable automatic Windows activation
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT \CurrentVersion\SoftwareProtectionPlatform\Activation" /v Manual /t REG_DWORD /d 1 /f || goto error
 
 rem Tell Windows that BIOS RTC is UTC
-echo.
-echo *** Tell Windows that BIOS RTC is UTC
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f || goto error
+rem echo.
+rem echo *** Tell Windows that BIOS RTC is UTC
+rem reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f || goto error
 
 rem Configure Windows Explorer
 echo.

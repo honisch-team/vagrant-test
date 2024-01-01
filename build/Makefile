@@ -36,9 +36,3 @@ package:
 test:
 	@cd $(TEST_DIR) && $(MAKE) test
 
-# Set Github environment variables
-.PHONY: set_github_vars
-set_github_vars:
-	@echo "VM_INSTALL_MEDIA_FILE=$(VM_INSTALL_MEDIA_FILE)" >> $$GITHUB_ENV
-	@echo "VM_INSTALL_MEDIA_SHA1=$(VM_INSTALL_MEDIA_SHA1)" >> $$GITHUB_ENV
-

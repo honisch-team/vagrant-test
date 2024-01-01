@@ -1,4 +1,7 @@
-Comment;Url;Hash
+Comment;Url;Sha1
 # Lines starting with hash are ignored
-Installer ISO;https://archive.org/download/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710_202006/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710.iso;4e0450ac73ab6f9f755eb422990cd9c7a1f3509c
-Something else;https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu;82e168117c23f7c479a97ee96c82af788d07452e
+Windows 7 Enterprise Installer ISO;https://archive.org/download/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710_202006/en_windows_7_enterprise_with_sp1_x86_dvd_u_677710.iso;4e0450ac73ab6f9f755eb422990cd9c7a1f3509c
+KB 3020369: April 2015 servicing stack update for Windows 7;https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2015/04/windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu;82e168117c23f7c479a97ee96c82af788d07452e
+KB 3125574: Convenience rollup update for Windows 7 SP1;http://download.windowsupdate.com/d/msdownload/update/software/updt/2016/05/windows6.1-kb3125574-v4-x64_2dafb1d203c8964239af3048b5dd4b1264cd93b9.msu;2dafb1d203c8964239af3048b5dd4b1264cd93b9
+KB 2729094: IE11 prerequisite: Update for the Segoe UI symbol font;https://download.microsoft.com/download/b/6/b/b6bf1d9b-2568-406b-88e8-e4a218dea90a/windows6.1-kb2729094-v2-x86.msu;565e7f2a6562ace748c5b6165aa342a11c96aa98
+KB 2731771: IE11 prerequisite: Update that provides new APIs for conversion between local time and UTC;https://download.microsoft.com/download/a/0/b/a0ba0a59-1f11-4736-91c0-dfcb06224d99/windows6.1-kb2731771-x86.msu;86675d2fd327b328793dc179727ce0ce5107a72e

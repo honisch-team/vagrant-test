@@ -42,17 +42,16 @@ jobs:
           #bash ./build/github_build_helper.sh configure-vmware-fusion --serial-no "${{secrets.VMWARE_FUSION_SERIAL}}"
           bash ./build/github_build_helper.sh configure-vmware-fusion
 
-      # Set Github environment variables
-      - name: Set Github environment variables
-        run: make -f ./build/Makefile set_github_vars
-
-      # Get cached install media
-      - name: Retrieve install media from cache
-        uses: actions/cache/restore@v3
+      # Get install image
+      - name: Get install image
+        uses: actions/download-artifact@v4
         with:
-          key: ${{env.VM_INSTALL_MEDIA_SHA1}}
-          path: ./install-media
-          fail-on-cache-miss: true
+          name: install-media
+          path: ./install-media/
+
+      # List install media
+      - name: List install-media
+        run: ls -R ./install-media
 
       # Create VM and install OS
       - name: Create VM and install OS

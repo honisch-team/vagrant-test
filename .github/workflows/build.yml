@@ -23,55 +23,65 @@ jobs:
         shell: pwsh
         run: |
           ## Get cache key for downloads cache
-          $hash = ./install-media/get_downloads_hash.ps1 ./install-media/downloads.csv
-          echo "downloads-cache-key=$hash" >> $env:GITHUB_OUTPUT
+          $cacheKeys = ./build/github_build_helper.ps1 -GetInstallMediaCacheKeys -DownloadsCsvFile ./install-media/downloads.csv -ScriptFile ./install-media/create_install_image.ps1
+          echo $cacheKeys
+          echo "install-files-cache-key=$($cacheKeys.installFilesKey)" >> $env:GITHUB_OUTPUT
+          echo "install-image-cache-key=$($cacheKeys.installImageKey)" >> $env:GITHUB_OUTPUT
+
+      # Get cached install image
+      - name: Get cached install image
+        id: get-cached-install-image
+        uses: actions/cache@v3
+        with:
+          key: install-image-${{steps.get-cache-keys.outputs.install-image-cache-key}}
+          path: ./install-media
 
       # Get cached install files
       - name: Get cached install files
-        id: get-cached-files
-        uses: actions/cache/restore@v3
+        id: get-cached-install-files
+        if: steps.get-cached-install-image.outputs.cache-hit != 'true'
+        uses: actions/cache@v3
         with:
-          key: install-media-downloads
-          path: ./install-media/download
-          lookup-only: true
+          key: install-files-${{steps.get-cache-keys.outputs.install-files-cache-key}}
+          restore-keys: install-files-
+          path: ./install-media/downloads
 
-      # Get install files
-      - name: Get install files
-        id: get-install-files
+      # Download install files
+      - name: Download install files
+        id: download-install-files
+        if: (steps.get-cached-install-image.outputs.cache-hit != 'true') && (steps.get-cached-install-files.outputs.cache-hit != 'true')
         shell: pwsh
-        run: |
-          ./install-media/create_install_media.ps1 -DownloadOnly
-          if ($LASTEXITCODE -eq 10) {
-            echo 'New files were downloaded => cache needs to be updated'
-            echo 'download-occurred=true' >> $env:GITHUB_OUTPUT
-            exit 0
-          }
+        run: ./install-media/download_install_files.ps1 -DownloadsCsvFile ./install-media/downloads.csv -OutputDir ./install-media/downloads -CleanupDownloads
 
-      # Save install files to cache if updated
-      - name: Save install files to cache if updated
-        if: steps.get-install-files.outputs.download-occurred == 'true'
-        uses: actions/cache/save@v3
-        with:
-          key: install-media-downloads
-          path: ./install-media/download
+      # Verify install files
+      - name: Verify install files
+        id: verify-install-files
+        if: (steps.get-cached-install-image.outputs.cache-hit != 'true') && (steps.get-cached-install-files.outputs.cache-hit == 'true')
+        shell: pwsh
+        run: ./install-media/download_install_files.ps1 -DownloadsCsvFile ./install-media/downloads.csv -OutputDir ./install-media/downloads -VerifyOnly
 
       # Install Windows ADK deployment tools
-      #- name: Install Windows ADK deployment tools
-      #  shell: pwsh
-      #  run: |
-      #    ./build/github_build_helper.ps1 -InstallAdkDeploymentTools
-      #    if ($LASTEXITCODE) { exit $LASTEXITCODE }
-      #    echo "Adding Oscdimg dir to PATH:"
-      #    echo "${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install Windows ADK deployment tools
+        if: steps.get-cached-install-image.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          ./build/github_build_helper.ps1 -InstallAdkDeploymentTools || throw "Error installing ADK deployment tools"
+          echo "Adding Oscdimg dir to PATH"
+          echo "${env:ProgramFiles(x86)}\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg" >> $env:GITHUB_PATH
 
-
-      # Generate custom install image
-      #- name: Generate custom install image
-      #  shell: pwsh
-      #  run: ./install-media/create_install_media.ps1 -SkipDownload
+      # Create install image
+      - name: Create install image
+        if: steps.get-cached-install-image.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: ./install-media/create_install_image.ps1 -InstallFilesDir ./install-media/downloads -WorkDir ./install-media/work -Output ./install-media/install.iso
 
       # Upload custom install image artifact
-
+      - name: Upload install image
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-media
+          path: ./install-media/install.iso
+          retention-days: 5
 
   # Build and test Vagrant box
   build-and-test:

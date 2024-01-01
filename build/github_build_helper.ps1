@@ -4,13 +4,17 @@ param(
     [Parameter(Mandatory = $true, ParameterSetName = 'InstallAdkDeploymentTools')]
     [switch] $InstallAdkDeploymentTools,
 
-    # Get hash of string
-    [Parameter(Mandatory = $true, ParameterSetName = 'GetStrHash')]
-    [switch] $GetStrHash,
+    # Get install media cache keys
+    [Parameter(Mandatory = $true, ParameterSetName = 'GetInstallMediaCacheKeys')]
+    [switch] $GetInstallMediaCacheKeys,
 
-    # string to hash
-    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetStrHash')]
-    [string] $StrToHash
+    # Downloads file
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallMediaCacheKeys')]
+    [string] $DownloadsCsvFile,
+
+    # Script file
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallMediaCacheKeys')]
+    [string] $ScriptFile
 )
 
 
@@ -44,6 +48,86 @@ function InstallAdkDeploymentTools() {
 }
 
 
+# Get cache keys for install media
+function GetInstallMediaCacheKeys($csvFile, $scriptFile) {
+    Write-Host '*** Calculating install media cache keys'
+
+    # Get install files download data as string
+    $installFilesStr = GetInstallMediaDownloadData $csvFile
+
+    # Get install media script data as string
+    $scriptStr = Get-Content -Raw $scriptFile
+
+    # Get install files hash
+    $installFilesHash = GetHashOfString $installFilesStr
+
+    # Get script data hash
+    $scriptHash = GetHashOfString $scriptStr
+
+    # Install image hash is combined hash of downloads hash and script hash
+    $installImageHash = GetHashOfString "$installFilesHash`r`n$scriptHash"
+
+    # Return cache keys
+    Write-Output @{ installFilesKey = $installFilesHash; installImageKey = $installImageHash }
+}
+
+
+# Get install media download data (filtered CSV data)
+function GetInstallMediaDownloadData($csvFile) {
+
+    Write-Host "Parsing $csvFile"
+
+    # Open CSV file
+    $csv = Import-Csv $csvFile -Delimiter ';'
+    $lines = [System.Collections.ArrayList]::new()
+
+    # Generate data to hash
+    foreach ($row in $csv) {
+        # Ignore all rows starting with #
+        if ($row.Comment -notmatch '^\s*#') {
+            # Ignore "Comment" column when hashing
+            [void]$lines.Add("$($row.Url);$($row.Sha1)")
+        }
+    }
+
+    # Combine into single string
+    $str = $lines | Join-String -Separator "`r`n"
+
+    return $str
+}
+
+
+# Get hash value of given string
+function GetHashOfString($stringToHash) {
+
+    $stringStream = $null
+    $writer = $null
+    try {
+        $stringAsStream = [System.IO.MemoryStream]::new()
+        # Write data to stream (default encoding: UTF8)
+        $writer = [System.IO.StreamWriter]::new($stringAsStream)
+        $writer.write($stringToHash)
+        $writer.Flush()
+        $stringAsStream.Position = 0
+
+        # Hash stream data
+        $hash = (Get-FileHash -Algorithm SHA1 -InputStream $stringAsStream).Hash.ToLowerInvariant()
+        return $hash
+    }
+    finally {
+        if ($null -ne $writer) {
+            $writer.Close()
+        }
+        if ($null -ne $stringStream) {
+            $stringStream.Close()
+        }
+    }
+
+    # Return hash string
+    Write-Output $hash
+}
+
+
 # Main function
 function Main {
     # Handle installing Windows ADK deployment tools
@@ -51,14 +135,9 @@ function Main {
         InstallAdkDeploymentTools
     }
 
-    # Get hash of string
-    if ($GetStrHash) {
-        $stringAsStream = [System.IO.MemoryStream]::new()
-        $writer = [System.IO.StreamWriter]::new($stringAsStream)
-        $writer.write($StrToHash)
-        $writer.Flush()
-        $stringAsStream.Position = 0
-        Write-Host (Get-FileHash -Algorithm SHA1 -InputStream $stringAsStream).Hash
+    # Get install media cache keys
+    if ($GetInstallMediaCacheKeys) {
+        return GetInstallMediaCacheKeys $DownloadsCsvFile $ScriptFile
     }
 }
 

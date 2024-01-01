@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v3
         with:
           key: install-image-${{steps.get-cache-keys.outputs.install-image-cache-key}}
-          path: ./install-media
+          path: ./install-media/install.iso
 
       # Get cached install files
       - name: Get cached install files

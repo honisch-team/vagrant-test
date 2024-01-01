@@ -19,8 +19,8 @@ goto error
 
 call :log
 call :log "*** Scheduling Post Install Script 2 after reboot"
-call :log "*** Running: schtasks /create /sc onlogon /tn post_install_2_vmw /tr "%MYDIR%\post_install_2_vmw.bat" /rl highest"
-schtasks /create /sc onlogon /tn post_install_2_vmw /tr "%MYDIR%\post_install_2_vmw.bat" /rl highest || goto error
+call :log "*** Running: reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce /v post_install_2_vmw /t REG_SZ /d "\"%MYDIR%\post_install_2_vmw.bat\"" /f"
+reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce /v post_install_2_vmw /t REG_SZ /d "\"%MYDIR%\post_install_2_vmw.bat\"" /f
 
 set REBOOT_DELAY=30
 call :log

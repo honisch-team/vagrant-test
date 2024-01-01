@@ -9,11 +9,6 @@ call :log "*** VMware Post Install Script 2"
 call :log "*****************************"
 
 call :log
-call :log "*** Removing scheduled task "post_install_2_vmw""
-call :log "*** Running: schtasks /delete /tn post_install_2_vmw /f"
-schtasks /delete /tn post_install_2_vmw /f || goto error
-
-call :log
 call :log "*** Installing VMware Tools"
 rem The following message doesn't work with "call :log" due to contained double quotes
 echo %DATE% %TIME:~0,-3% *** Running: E:\setup.exe /S /v "/qn REBOOT=R"
@@ -26,8 +21,8 @@ goto error
 
 call :log
 call :log "*** Scheduling Post Install Script 3 after reboot"
-call :log "*** Running: schtasks /create /sc onlogon /tn post_install_3_vmw /tr "%MYDIR%\post_install_3_vmw.bat" /rl highest"
-schtasks /create /sc onlogon /tn post_install_3_vmw /tr "%MYDIR%\post_install_3_vmw.bat" /rl highest || goto error
+call :log "*** Running: reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce /v post_install_3_vmw /t REG_SZ /d "\"%MYDIR%\post_install_3_vmw.bat\"" /f"
+reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce /v post_install_3_vmw /t REG_SZ /d "\"%MYDIR%\post_install_3_vmw.bat\"" /f
 
 set REBOOT_DELAY=10
 call :log

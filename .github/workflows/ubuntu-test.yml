@@ -1,0 +1,35 @@
+############################################################
+# Root workflow for building
+############################################################
+name: Ubuntu-Test
+
+run-name: Ubuntu-Test ${{github.run_id}}
+
+on: [workflow_dispatch]
+
+jobs:
+  # Test
+  test:
+    runs-on: ubuntu-latest-m
+    steps:
+      # Check out
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Determine cache keys
+      - name: Setup
+        run: |
+          ls /dev/kvm || true
+          echo "Free disk space"
+          df -h
+          echo "Free mem" 
+          free -h
+          echo "Install VirtualBox"
+          sudo apt-get install virtualbox
+          echo "VBox version" 
+          VBoxManage -v
+          which VBoxManage || true
+          echo "vmrun" 
+          which vmrun || true
+          echo "vagrant" 
+          which vagrant || true

@@ -18,12 +18,17 @@ on:
       virt-provider-id:
         required: true
         type: string
+      # Runner type
+      runner-name:
+        required: true
+        type: string
 
 jobs:
 
   # Test Vagrant box
   test:
-    runs-on: macos-12
+    runs-on: ${{inputs.runner-name}}
+    name: test-${{inputs.virt-provider-id}}-${{inputs.test-run-id}}-${{inputs.runner-name}}
     steps:
       # Check out
       - name: Checkout

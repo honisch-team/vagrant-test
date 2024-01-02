@@ -83,8 +83,8 @@ jobs:
           path: ./install-media/install.iso
           retention-days: 5
 
-  # Build and test Vagrant box on MacOS
-  build-and-test-macos:
+  # Build and test Vagrant box
+  build-and-test:
     # Run after cache-install-media
     needs: create-install-media
 
@@ -93,12 +93,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - virt-provider-name: virtualbox
-            virt-provider-id: vbx
+          - virt-provider-id: vbx
             runner-name: macos-12
-          - virt-provider-name: vmware
-            virt-provider-id: vmw
+          - virt-provider-id: vmw
             runner-name: macos-12
+          - virt-provider-id: vbx
+            runner-name: ubuntu-latest-m
+          - virt-provider-id: vmw
+            runner-name: ubuntu-latest-m
 
     # Reference reusable workflow to do the actual building and testing
     uses: ./.github/workflows/sub-build-and-test.yml
@@ -108,8 +110,6 @@ jobs:
 
     # Pass parameters to the sub-workflow
     with:
-      # Virtualization provider name
-      virt-provider-name: ${{matrix.virt-provider-name}}
       # Virtualization provider ID
       virt-provider-id: ${{matrix.virt-provider-id}}
       # Runner name

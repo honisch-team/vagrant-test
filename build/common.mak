@@ -31,28 +31,24 @@ VG_TEST_ROOT_DIR := $(ROOT_DIR)/vagrant-test-env
 # VM provider IDs
 VM_PROVIDER_ID_LIST := vbx vmw
 
-# VM provider names
-VM_PROVIDER.vbx := virtualbox
-VM_PROVIDER.vmw := vmware
-
 
 # Check whether VirtualBox is installed
-ifndef MAKE_VIRTUALBOX
+ifndef MAKE_VBX
 ifneq ($(shell which vboxmanage),)
-export MAKE_VIRTUALBOX=1
+export MAKE_VBX=1
 $(info *** VirtualBox detected ***)
 else
-export MAKE_VIRTUALBOX=
+export MAKE_VBX=
 endif
 endif
 
 # Check whether VMware is installed
-ifndef MAKE_VMWARE
+ifndef MAKE_VMW
 ifneq ($(shell which vmrun),)
-export MAKE_VMWARE=1
+export MAKE_VMW=1
 $(info *** VMware detected ***)
 else
-export MAKE_VMWARE=
+export MAKE_VMW=
 endif
 endif
 

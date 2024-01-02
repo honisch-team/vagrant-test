@@ -108,7 +108,7 @@ fi
 # Download KB4474419 required by VMware tools
 echo "Downloading KB4474419..."
 KB4474419_URL=https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2019/09/windows6.1-kb4474419-v3-x86_0f687d50402790f340087c576886501b3223bec6.msu
-(cd $VM_INSTALL_FILES_SRC_DIR && curl -o kb4474419.msu $KB4474419_URL)
+(cd $VM_INSTALL_FILES_SRC_DIR && curl -L -o kb4474419.msu --retry 5 --retry-all-errors $KB4474419_URL)
 
 # Provide scripts
 cp $SCRIPT_DIR/post_install_*vmw.bat $VM_INSTALL_FILES_SRC_DIR/

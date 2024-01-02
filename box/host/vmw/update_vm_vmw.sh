@@ -13,7 +13,7 @@ failure() {
 trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
 # Include common stuff
-source $SCRIPT_DIR/common_vbx.sh
+source $SCRIPT_DIR/common_vmw.sh
 
 # Download tools for setup
 downloadTools() {
@@ -22,20 +22,21 @@ downloadTools() {
   # Download "sdelete"
   echo "Downloading Sysinternals SDelete..."
   local SDELETE_URL=https://download.sysinternals.com/files/SDelete.zip
-  (cd $TOOLS_DIR && curl -o a.zip $SDELETE_URL && unzip -o a.zip && rm a.zip)
+  (cd $TOOLS_DIR && curl -L -o a.zip --retry 5 --retry-all-errors $SDELETE_URL && unzip -o a.zip && rm a.zip)
 
   # Download KB3138612 to fix Windows Update
   echo "Downloading KB3138612..."
   local KB3138612_URL=https://catalog.s.download.windowsupdate.com/d/msdownload/update/software/updt/2016/02/windows6.1-kb3138612-x86_6e90531daffc13bc4e92ecea890e501e807c621f.msu
-  (cd $TOOLS_DIR && curl -o kb3138612.msu $KB3138612_URL)
+  (cd $TOOLS_DIR && curl -L -o kb3138612.msu --retry 5 --retry-all-errors $KB3138612_URL)
 }
 
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR WORK_DIR\n"
+  echo -e "Usage: $0 [OPTION] NAME BASE_DIR USER PASSWORD SRC_DIR WORK_DIR\n"
   echo "Update virtual machine after operating system installation"
   echo "NAME:      Name of VM"
+  echo "BASE_DIR:  Directory where VM is created"
   echo "USER:      Username for VM logon"
   echo "PASSWORD:  Password for VM logon"
   echo "SRC_DIR:   Directory with files to copy to VM and run"
@@ -119,17 +120,18 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 5 ] ; then
+if [ $# -ne 6 ] ; then
   display_usage
   exit 1
 fi
 
 # Read params
 VM_NAME=$1
-VM_USER=$2
-VM_PASSWORD=$3
-VM_SRC_DIR=$4
-VM_WORK_DIR=$5
+VM_BASE_DIR=$2
+VM_USER=$3
+VM_PASSWORD=$4
+VM_SRC_DIR=$5
+VM_WORK_DIR=$6
 
 
 echo "**************************************"
@@ -161,6 +163,9 @@ if [ "$OPT_NO_ZERODISK" -ne 0 ] ; then
   VM_GUEST_PARAMS+=(NO_ZERODISK)
 fi
 
+VM_DIR=$VM_BASE_DIR/$VM_NAME
+VM_VMX=$VM_DIR/$VM_NAME.vmx
+
 # Create work dir if required
 if [ ! -d $VM_WORK_DIR ] ; then
   mkdir -p $VM_WORK_DIR
@@ -172,13 +177,13 @@ downloadTools $VM_WORK_DIR
 
 # Startup VM
 echo "Starting VM \"$VM_NAME\"..."
-VBoxManage startvm $VM_NAME --type headless
-waitUntilVmStartupComplete $VM_NAME
+startVm $VM_VMX
+waitForGuestVar $VM_VMX user_logged_in
 
 # Run update
 echo "Copying update files from \"$VM_SRC_DIR\" to VM..."
-VBoxManage guestcontrol $VM_NAME mkdir --username=$VM_USER --password=$VM_PASSWORD "C:\\temp" || echo "Ignoring error"
-VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp" $VM_WORK_DIR
+vmrun -gu $VM_USER -gp $VM_PASSWORD createDirectoryInGuest $VM_VMX "C:\\temp\\work" || echo "Ignoring error"
+vmrun -gu $VM_USER -gp $VM_PASSWORD CopyFileFromHostToGuest $VM_VMX $VM_WORK_DIR "C:\\Temp\\work"
 
 echo "Running update script..."
 VM_SRC_DIR_BASE=$(basename $VM_WORK_DIR)
@@ -196,8 +201,8 @@ do
   # Run script
   echo "Running run_update.bat ($MAX_UPDATE_LOOPS runs left before abort)"
   EXIT_CODE=0
-  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
-  echo "Script returned $EXIT_CODE (VBoxManage adds 32 to non-zero script exit codes)"
+  runCommandInVm $VM_VMX "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
+  echo "Script returned $EXIT_CODE (function adds 32 to non-zero script exit codes)"
   case "$EXIT_CODE" in
   0) # Script exit code 0: Success, update finished
     echo "Success, update finished"
@@ -206,11 +211,11 @@ do
   34)  # Script exit code 2: Reboot VM and re-run update script
     echo "Reboot VM and re-run update script"
     # Wait for VM shutdown
-    waitUntilVmStopped $VM_NAME
+    waitUntilVmStopped $VM_VMX
     # Startup VM again
     echo "Starting VM ..."
-    VBoxManage startvm $VM_NAME --type headless
-    waitUntilVmStartupComplete $VM_NAME
+    vmrun start $VM_VMX nogui
+    waitForGuestVar $VM_VMX user_logged_in
     ;;
   35)  # Script exit code 3: Re-run update script
     echo "Re-run update script"
@@ -226,13 +231,14 @@ done
 # Cleanup
 if [ "$OPT_NO_CLEANUP_FILES" -eq 0 ] ; then
   echo "Removing files from VM"
-  VBoxManage guestcontrol $VM_NAME rmdir --username=$VM_USER --password=$VM_PASSWORD --recursive "C:\\Temp"
+  runCommandInVm $VM_VMX "reg delete HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v on_logon_vmw /f" || true
+  vmrun -gu $VM_USER -gp $VM_PASSWORD deleteDirectoryInGuest $VM_VMX "C:\\Temp"
 else
   echo "Debug mode: Skip removing files from VM"
 fi
 
 # Shutdown VM
 echo "Shutting down VM..."
-stopVmViaPowerButton $VM_NAME
+vmrun stop $VM_VMX soft
 
 echo "Done updating VM"

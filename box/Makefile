@@ -31,15 +31,15 @@ clean: remove_vm dist_clean work_clean
 .PHONY: work_clean
 
 # Include VirtualBox-specific rules
-ifeq ($(MAKE_VIRTUALBOX),1)
+ifeq ($(MAKE_VBX),1)
 $(info *** Including VirtualBox build rules ***)
-include $(BOX_DIR)/virtualbox.mak
+include $(BOX_DIR)/vbx.mak
 endif
 
 # Include VMware-specific rules
-ifeq ($(MAKE_VMWARE),1)
+ifeq ($(MAKE_VMW),1)
 $(info *** Including VMware build rules ***)
-include $(BOX_DIR)/vmware.mak
+include $(BOX_DIR)/vmw.mak
 endif
 
 # Build VM
@@ -61,18 +61,15 @@ package.%: update_vm.% package_nodeps.% ;
 # Create VM (no prerequisites)
 # %: VM provider ID (vbx, vmw, ...)
 create_vm_nodeps.%: VM_PROVIDER_ID = $*
-create_vm_nodeps.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
 create_vm_nodeps.%:
-	@echo "*** $@: VM provider: $(VM_PROVIDER)"
+	@echo "*** $@: VM provider ID: $(VM_PROVIDER_ID)"
 	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
-	@bash $(BOX_DIR)/host/$(VM_PROVIDER)/create_vm_$(VM_PROVIDER_ID).sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
-
+	@bash $(BOX_DIR)/host/$(VM_PROVIDER_ID)/create_vm_$(VM_PROVIDER_ID).sh $(VM_NAME) $(VM_BASE_DIR)/$(VM_PROVIDER_ID) $(VM_OS_TYPE.$(VM_PROVIDER_ID)) $(VM_CPU_COUNT) $(VM_RAM_MB) $(VM_HDD_SIZE_MB) $(VM_VIDEO_RAM_MB)
 
 # Remove VM from dist
 # %: VM provider ID (vbx, vmw, ...)
 dist_clean.%: VM_PROVIDER_ID = $*
-dist_clean.%: VM_PROVIDER = $(VM_PROVIDER.$(VM_PROVIDER_ID))
 dist_clean.%:
-	@echo "*** $@: VM provider: $(VM_PROVIDER)"
+	@echo "*** $@: VM provider ID: $(VM_PROVIDER_ID)"
 	$(call check_valid_vm_provider_id,$(VM_PROVIDER_ID))
-	@-rm $(DIST_DIR)/$(VM_PROVIDER)/*
+	@-rm $(DIST_DIR)/$(VM_PROVIDER_ID)/*

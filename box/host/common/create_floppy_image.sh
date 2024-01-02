@@ -107,7 +107,7 @@ elif is_mtools_available ; then
   create_image_mtools $SOURCE_DIR $IMAGE_FILE
 else
   echo "Error: No supported tool for creating floppy images found."
-  return 1
+  exit 1
 fi
 
 echo "Finished creating floppy image."

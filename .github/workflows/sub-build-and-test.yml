@@ -6,10 +6,6 @@ name: Sub-Workflow Build and Test
 on:
   workflow_call:
     inputs:
-      # Virtualization provider name: vmware or virtualbox
-      virt-provider-name:
-        required: true
-        type: string
       # Virtualization provider id: vmw or vbx
       virt-provider-id:
         required: true
@@ -24,7 +20,7 @@ jobs:
   # Build Vagrant box
   build:
     runs-on: ${{inputs.runner-name}}
-    name: build-${{inputs.virt-provider-id}}-${{inputs.runner-name}}
+    name: build_${{inputs.virt-provider-id}}_${{inputs.runner-name}}
     steps:
       # Check out
       - name: Checkout
@@ -32,6 +28,7 @@ jobs:
 
       # Upgrade Mac OS tools
       - name: Upgrade Mac OS tools
+        if: runner.os == 'macOS'
         run: |
           brew install bash
           brew install gnu-sed
@@ -39,13 +36,10 @@ jobs:
           brew install gnu-getopt
           echo "/usr/local/opt/gnu-getopt/bin" >> $GITHUB_PATH
 
-      # Setup VMware Fusion
-      - name: Setup VMware Fusion
-        if: inputs.virt-provider-name == 'vmware'
+      # Setup build environment
+      - name: Setup build environment
         run: |
-          brew install --cask vmware-fusion
-          #bash ./build/github_build_helper.sh configure-vmware-fusion --serial-no "${{secrets.VMWARE_FUSION_SERIAL}}"
-          bash ./build/github_build_helper.sh configure-vmware-fusion
+          bash ./build/github_build_helper.sh install-build-tools ${{inputs.virt-provider-id}} ${{runner.os}}
 
       # Get install image
       - name: Get install image
@@ -58,17 +52,17 @@ jobs:
       - name: Create VM and install OS
         id: install-os
         timeout-minutes: 60
-        continue-on-error: true
+        #continue-on-error: true
         run: make -f ./box/Makefile install_os_vm.${{inputs.virt-provider-id}}
 
-      # Retry: Create VM and install OS
-      - name: "Retry: Create VM and install OS"
-        if: (inputs.virt-provider-name == 'vmware') && (steps.install-os.outcome != 'success')
-        run: |
-          brew uninstall vmware-fusion
-          brew install --cask vmware-fusion
-          bash ./build/github_build_helper.sh configure-vmware-fusion
-          make -f ./box/Makefile clean install_os_vm.${{inputs.virt-provider-id}}
+      # Handle error
+      #- name: "Retry: Create VM and install OS"
+      #  if: (inputs.virt-provider-id == 'vmw') && (steps.install-os.outcome != 'success')
+      #  run: |
+      #    brew uninstall vmware-fusion
+      #    brew install --cask vmware-fusion
+      #    bash ./build/github_build_helper.sh configure-vmware-fusion
+      #    make -f ./box/Makefile clean install_os_vm.${{inputs.virt-provider-id}}
 
       # Get logs
       #- name: Get VM logs
@@ -91,8 +85,8 @@ jobs:
       - name: Upload Dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Dist_${{inputs.virt-provider-id}}
-          path: ./dist/${{inputs.virt-provider-name}}
+          name: Dist_${{inputs.virt-provider-id}}_${{inputs.runner-name}}
+          path: ./dist/${{inputs.virt-provider-id}}
           retention-days: 5
 
       # Upload logs
@@ -100,7 +94,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Logs_Build_${{inputs.virt-provider-name}}
+          name: Logs_Build_${{inputs.virt-provider-id}}_${{inputs.runner-name}}
           path: |
             ./vm-base/**/*.log
 
@@ -121,8 +115,6 @@ jobs:
     with:
       # Test run
       test-run-id: ${{matrix.test-run-id}}
-      # Virtualization provider name
-      virt-provider-name: ${{inputs.virt-provider-name}}
       # Virtualization provider ID
       virt-provider-id: ${{inputs.virt-provider-id}}
       # Runner name

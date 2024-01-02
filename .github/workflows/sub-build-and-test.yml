@@ -49,10 +49,6 @@ jobs:
           name: install-media
           path: ./install-media/
 
-      # List install media
-      - name: List install-media
-        run: ls -R ./install-media
-
       # Create VM and install OS
       - name: Create VM and install OS
         id: install-os
@@ -60,12 +56,21 @@ jobs:
         continue-on-error: true
         run: make -f ./box/Makefile install_os_vm.${{inputs.virt-provider-id}}
 
-      # Get logs
-      - name: Get VM logs
-        if: steps.install-os.outcome != 'success'
+      # Retry: Create VM and install OS
+      - name: "Retry: Create VM and install OS"
+        if: (inputs.virt-provider-name == 'vmware') && (steps.install-os.outcome != 'success')
         run: |
-          echo "Outcome of previous step: ${{steps.install-os.outcome}}"
-          exit 1
+          brew uninstall vmware-fusion
+          brew install --cask vmware-fusion
+          bash ./build/github_build_helper.sh configure-vmware-fusion
+          make -f ./box/Makefile clean install_os_vm.${{inputs.virt-provider-id}}
+
+      # Get logs
+      #- name: Get VM logs
+      #  if: steps.install-os.outcome != 'success'
+      #  run: |
+      #    echo "Outcome of previous step: ${{steps.install-os.outcome}}"
+      #    exit 1
 
       # Update VM
       - name: Update VM

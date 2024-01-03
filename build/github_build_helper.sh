@@ -27,14 +27,12 @@ display_usage() {
   echo "  Options for configure-vmware-fusion:"
   echo "    -s, --serial-no=SERIAL   serial number for VMware Fusion"
   echo ""
-  echo "install-build-tools VIRT_PROVIDER RUNNER_OS"
+  echo "install-build-tools VIRT_PROVIDER RUNNER_OS WORKFLOW"
   echo "  Install build tools on Github hosted runner"
   echo "    VIRT_PROVIDER: Virtualization provider (vbx,vmw)"
   echo "      vbx=Virtualbox, vmw=VMware (Workstation on Linux or Fusion on MacOS)"
   echo "    RUNNER_OS:     Runner operating system (Linux,macOS)"
-  echo ""
-  echo "  Options for install-build-tools:"
-  echo "    -v, --vagrant  Install Vagrant"
+  echo "    WORKFLOW:      build or test"
   echo ""
 }
 
@@ -42,7 +40,7 @@ display_usage() {
 # Install build tools for MacOS runner
 install_build_tools_macos_runner() {
   local VIRT_PROVIDER=$1
-  local INSTALL_VAGRANT=$2
+  local WORKFLOW=$2
 
   case "$VIRT_PROVIDER" in
     vbx)
@@ -56,12 +54,12 @@ install_build_tools_macos_runner() {
       echo "*** Configuring VMware Fusion"
       register_vmware_fusion_serial_no "" || exit $?
 
-      # Install tools for Vagrant
-      if [ "$INSTALL_VAGRANT" != "" ] ; then
+      # Install tools for test workflow
+      if [ "$WORKFLOW" = "test" ] ; then
         echo "*** Installing Vagrant VMware utility"
         brew install --cask vagrant-vmware-utility || exit $?
 
-        echo "*** Configuring Vagrant VMware utility"
+        echo "*** Installing Vagrant Plugin vagrant-vmware-desktop"
         vagrant plugin install vagrant-vmware-desktop || exit $?
       fi
       ;;
@@ -77,7 +75,12 @@ install_build_tools_macos_runner() {
 # Install build tools for Linux runner
 install_build_tools_linux_runner() {
   local VIRT_PROVIDER=$1
-  local INSTALL_VAGRANT=$2
+  local WORKFLOW=$2
+
+  echo "*** Setting up hashicorp apt repository"
+  wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+  sudo apt update && sudo apt install vagrant
 
   echo "*** Installing mtools"
   sudo apt-get install mtools || exit $?
@@ -92,10 +95,8 @@ install_build_tools_linux_runner() {
       sudo apt-get install virtualbox virtualbox-guest-additions-iso || exit $?
 
       # Install Vagrant
-      if [ "$INSTALL_VAGRANT" != "" ] ; then
-        echo "*** Installing Vagrant"
-        sudo apt-get install vagrant || exit $?
-      fi
+      echo "*** Installing Vagrant"
+      sudo apt-get install vagrant || exit $?
       ;;
     vmw)
       # Download VMware Workstation
@@ -112,16 +113,20 @@ install_build_tools_linux_runner() {
       echo "*** Configuring VMware Workstation"
       register_vmware_workstation_serial_no "" || exit $?
 
-      # Install tools for Vagrant
-      if [ "$INSTALL_VAGRANT" != "" ] ; then
-        echo "*** Installing Vagrant"
-        sudo apt-get install vagrant || exit $?
+      # Install Vagrant
+      echo "*** Installing Vagrant"
+      sudo apt-get install vagrant || exit $?
 
+      # Install tools for test workflow
+      if [ "$WORKFLOW" = "test" ] ; then
         echo "*** Installing Vagrant VMware utility"
         sudo apt-get install vagrant-vmware-utility || exit $?
 
-        echo "*** Configuring Vagrant VMware utility"
+        echo "*** Installing Vagrant Plugin vagrant-vmware-desktop"
         vagrant plugin install vagrant-vmware-desktop || exit $?
+
+        #echo "*** Installing Vagrant Plugins winrm winrm-fs"
+        #vagrant plugin install winrm winrm-fs || exit $?
       fi
       ;;
     *) # error
@@ -264,35 +269,8 @@ cmd_install_build_tools() {(
   set -euo pipefail
   trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
-  EXIT_CODE=0
-  VALID_ARGS=$(getopt -o v --long vagrant --name "$0" -- "$@") || EXIT_CODE=$?
-  if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
-  eval set -- ${VALID_ARGS}
-
-  # Set initial values
-  OPT_VAGRANT=
-
-  # extract options and arguments into variables
-  while true ; do
-    case "$1" in
-      -v | --vagrant)
-        OPT_VAGRANT=1
-        shift
-        ;;
-      --) # end of arguments
-        shift
-        break
-        ;;
-      *) # error
-        >&2 echo "Unsupported option: $1"
-        display_usage
-        exit 1
-        ;;
-    esac
-  done
-
   # Check for correct number of arguments
-  if [ $# -ne 2 ] ; then
+  if [ $# -ne 3 ] ; then
     display_usage
     exit 1
   fi
@@ -300,20 +278,16 @@ cmd_install_build_tools() {(
   # Read params
   VIRT_PROVIDER=$1
   RUNNER_OS=$2
+  WORKFLOW=$3
 
-  echo -n "Install build tools for $VIRT_PROVIDER on $RUNNER_OS"
-  if [ "$OPT_VAGRANT" != "" ] ; then
-    echo ", including Vagrant"
-  else
-    echo ""
-  fi
+  echo "Install build tools for $VIRT_PROVIDER on $RUNNER_OS in workflow $WORKFLOW"
 
   case "$RUNNER_OS" in
     Linux)
-      install_build_tools_linux_runner "$VIRT_PROVIDER" "$OPT_VAGRANT"
+      install_build_tools_linux_runner "$VIRT_PROVIDER" "$WORKFLOW"
       ;;
     macOS)
-      install_build_tools_macos_runner "$VIRT_PROVIDER" "$OPT_VAGRANT"
+      install_build_tools_macos_runner "$VIRT_PROVIDER" "$WORKFLOW"
       ;;
     *) # error
       >&2 echo "Error: Unsupported runner OS: $RUNNER_OS"

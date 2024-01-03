@@ -43,7 +43,7 @@ jobs:
       # Setup build environment
       - name: Setup build environment
         run: |
-          bash ./build/github_build_helper.sh install-build-tools ${{inputs.virt-provider-id}} ${{runner.os}} --vagrant
+          bash ./build/github_build_helper.sh install-build-tools ${{inputs.virt-provider-id}} ${{runner.os}} test
 
       # Download Dist artifact
       - name: Download Dist artifact
@@ -64,5 +64,5 @@ jobs:
         with:
           name: Logs_Test_${{inputs.virt-provider-id}}_${{inputs.test-run-id}}_${{inputs.runner-name}}
           path: |
-            ./test/logs
+            ./log/test
 

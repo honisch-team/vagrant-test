@@ -39,7 +39,7 @@ jobs:
       # Setup build environment
       - name: Setup build environment
         run: |
-          bash ./build/github_build_helper.sh install-build-tools ${{inputs.virt-provider-id}} ${{runner.os}}
+          bash ./build/github_build_helper.sh install-build-tools ${{inputs.virt-provider-id}} ${{runner.os}} build
 
       # Get install image
       - name: Get install image
@@ -47,6 +47,12 @@ jobs:
         with:
           name: install-media
           path: ./install-media/
+
+      # Check install image
+      - name: Check install image
+        run: |
+          ls ./install-media/install.iso
+          shasum -a 1 ./install-media/install.iso
 
       # Create VM and install OS
       - name: Create VM and install OS

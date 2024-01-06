@@ -134,21 +134,22 @@ startVm() {
       return 0
     fi
     echo "VM start failed, $MAX_ATTEMPTS attempts left"
+    sleep 5
     #
-    echo "*** Start: try to fix VMware networking"
-    echo "*** vmnet-cli --status"
-    sudo vmnet-cli --status || true
-    sleep 2
-    echo "*** vmnet-cli --configure"
-    sudo vmnet-cli --configure || true
-    sleep 2
-    echo "*** vmnet-cli --stop"
-    sudo vmnet-cli --stop || true
-    sleep 2
-    echo "*** vmnet-cli --start"
-    sudo vmnet-cli --start || true
-    sleep 2
-    echo "*** Done: try to fix VMware networking"
+    #echo "*** Start: try to fix VMware networking"
+    #echo "*** vmnet-cli --status"
+    #sudo vmnet-cli --status || true
+    #sleep 2
+    #echo "*** vmnet-cli --configure"
+    #sudo vmnet-cli --configure || true
+    #sleep 2
+    #echo "*** vmnet-cli --stop"
+    #sudo vmnet-cli --stop || true
+    #sleep 2
+    #echo "*** vmnet-cli --start"
+    #sudo vmnet-cli --start || true
+    #sleep 2
+    #echo "*** Done: try to fix VMware networking"
   done
   return $EXIT_CODE
 }

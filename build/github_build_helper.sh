@@ -109,9 +109,25 @@ install_build_tools_linux_runner() {
       # Install VMware Workstation
       echo "*** Installing VMware Workstation"
       sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+      echo "*** vmware-modconfig"
+      sudo /usr/bin/vmware-modconfig --console --install-all || true
+
+      echo "*** /etc/init.d/vmware start"
+      sudo /etc/init.d/vmware start || true
+
+      echo "/etc/init.d/vmware-workstation-server start"
+      sudo /etc/init.d/vmware-workstation-server start || true
+
+      echo "/etc/init.d/vmware-USBArbitrator start"
+      sudo /etc/init.d/vmware-USBArbitrator start || true
+
+      echo "/usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52"
+      sudo /usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52 || true
 
       echo "*** Configuring VMware Workstation"
       register_vmware_workstation_serial_no "" || exit $?
+
+      sudo -l
 
       # Install Vagrant
       echo "*** Installing Vagrant"
@@ -124,9 +140,6 @@ install_build_tools_linux_runner() {
 
         echo "*** Installing Vagrant Plugin vagrant-vmware-desktop"
         vagrant plugin install vagrant-vmware-desktop || exit $?
-
-        #echo "*** Installing Vagrant Plugins winrm winrm-fs"
-        #vagrant plugin install winrm winrm-fs || exit $?
       fi
       ;;
     *) # error

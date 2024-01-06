@@ -51,7 +51,7 @@ jobs:
       # Check install image
       - name: Check install image
         run: |
-          ls ./install-media/install.iso
+          ls -l ./install-media/install.iso
           shasum -a 1 ./install-media/install.iso
 
       # Create VM and install OS
@@ -103,6 +103,7 @@ jobs:
           name: Logs_Build_${{inputs.virt-provider-id}}_${{inputs.runner-name}}
           path: |
             ./vm-base/**/*.log
+            /var/log/vmware*.log
 
 
   # Test Vagrant box

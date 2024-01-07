@@ -17,13 +17,22 @@ jobs:
         uses: actions/checkout@v4
 
       # Setup build environment
-      - name: Setup build environment
-        run: |
-          bash ./build/github_build_helper.sh install-build-tools vmw ${{runner.os}} build
-          sudo apt-install foot
-          sudo apt-install waypipe
+      #- name: Setup build environment
+      #  run: |
+      #    #bash ./build/github_build_helper.sh install-build-tools vmw ${{runner.os}} build
+      #    sudo apt-get install openssh-server
+      #    cat /etc/ssh/sshd_config | sed s/#AllowTcpForwarding/AllowTcpForwarding/g | sudo tee /etc/ssh/sshd_config.new > /dev/null
+      #    sudo mv /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+      #    cat /etc/ssh/sshd_config | sed s/#AllowTcpForwarding/AllowTcpForwarding/g | sudo tee /etc/ssh/sshd_config.new > /dev/null
+      #    sudo mv /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+      #    sudo systemctl restart sshd
+      #    sudo apt-get install foot
+      #    sudo apt-get install waypipe
+      #    sudo apt-get install x11-apps
 
       # Setup tmate session
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      #- name: Setup tmate session
+      #  uses: mxschmitt/action-tmate@v3
+
+
+

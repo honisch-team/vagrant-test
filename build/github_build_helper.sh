@@ -72,6 +72,92 @@ install_build_tools_macos_runner() {
 }
 
 
+# Install VMware Workstation
+install_vmware_workstation() {
+  local VIRT_PROVIDER=$1
+
+  # Set  VMware Workstation version to 17 if not set
+  if [[ -z "${VMWARE_WORKSTATION_VERSION-}" ]]; then
+    VMWARE_WORKSTATION_VERSION=17
+  fi
+
+  case "$VMWARE_WORKSTATION_VERSION" in
+    17)
+      # VMware Workstation 17
+      echo "*** Downloading VMware Workstation 17"
+
+      local INSTALLER_FILE=VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle
+      local DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1750-LX/$INSTALLER_FILE
+
+      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
+      chmod a+x $INSTALLER_FILE || exit $?
+
+      # Install VMware Workstation
+      echo "*** Installing VMware Workstation 17"
+      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+
+      echo "*** Configuring VMware Workstation 17"
+      register_vmware_workstation_serial_no "" || exit $?
+
+      echo "*** vmware-modconfig"
+      sudo /usr/bin/vmware-modconfig --console --install-all || true
+      ;;
+    16)
+      # VMware Workstation 16
+      echo "*** Downloading VMware Workstation 16"
+
+      local INSTALLER_FILE=VMware-Workstation-Full-16.2.4-20089737.x86_64.bundle
+      local DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1624-LX/$INSTALLER_FILE
+
+      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
+      chmod a+x $INSTALLER_FILE || exit $?
+
+      # Install VMware Workstation
+      echo "*** Installing VMware Workstation 16"
+      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+
+      echo "*** Configuring VMware Workstation 16"
+      register_vmware_workstation_serial_no "" || exit $?
+
+      # Workaround for building kernel modules
+      echo "*** Installing kernel modules by workaround"
+      curl -L -o workstation-16.2.4.tar.gz https://github.com/mkubecek/vmware-host-modules/archive/workstation-16.2.4.tar.gz || exit $?
+      tar xzvf workstation-16.2.4.tar.gz || exit $?
+      cd vmware-host-modules-workstation-16.2.4
+      make || exit $?
+      sudo make install || exit $?
+      sudo systemctl restart vmware.service || exit $?
+      ;;
+    15)
+      # VMware Workstation 15
+      echo "*** Downloading VMware Workstation 15"
+
+      local INSTALLER_FILE=VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle
+      local DOWNLOAD_URL=https://download3.vmware.com/software/wkst/file/$INSTALLER_FILE
+
+      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
+      chmod a+x $INSTALLER_FILE || exit $?
+
+      # Install VMware Workstation
+      echo "*** Installing VMware Workstation 15"
+      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+
+      echo "*** Configuring VMware Workstation 15"
+      register_vmware_workstation_serial_no "" || exit $?
+
+      echo "*** vmware-modconfig"
+      sudo /usr/bin/vmware-modconfig --console --install-all || true
+      exit 1
+      ;;
+    *) # error
+      >&2 echo "Error: Unsupported virtualization provider: $VIRT_PROVIDER"
+      display_usage
+      exit 1
+      ;;
+  esac
+}
+
+
 # Install build tools for Linux runner
 install_build_tools_linux_runner() {
   local VIRT_PROVIDER=$1
@@ -80,7 +166,7 @@ install_build_tools_linux_runner() {
   echo "*** Setting up hashicorp apt repository"
   wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
   echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-  sudo apt update && sudo apt install vagrant
+  sudo apt-get update && sudo apt install vagrant
 
   echo "*** Installing mtools"
   sudo apt-get install mtools || exit $?
@@ -98,36 +184,46 @@ install_build_tools_linux_runner() {
       echo "*** Installing Vagrant"
       sudo apt-get install vagrant || exit $?
       ;;
-    vmw)
+    vmw*)
+      # Install VMware Workstation
+      install_vmware_workstation $VIRT_PROVIDER || exit $?
+
       # Download VMware Workstation
-      echo "*** Downloading VMware Workstation"
-      INSTALLER_FILE=VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle
-      DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1750-LX/$INSTALLER_FILE
-      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
-      chmod a+x VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle || exit $?
+      #echo "*** Downloading VMware Workstation"
+      #INSTALLER_FILE=VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle
+      #DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1750-LX/$INSTALLER_FILE
+      INSTALLER_FILE=VMware-Workstation-Full-16.2.4-20089737.x86_64.bundle
+      DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1624-LX/$INSTALLER_FILE
+      #INSTALLER_FILE=VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle
+      #DOWNLOAD_URL=https://download3.vmware.com/software/wkst/file/$INSTALLER_FILE
+      #INSTALLER_FILE=VMware-Workstation-Full-14.1.7-12989993.x86_64.bundle
+      #DOWNLOAD_URL=https://download3.vmware.com/software/wkst/file/$INSTALLER_FILE
+
+      #curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
+      #chmod a+x $INSTALLER_FILE || exit $?
 
       # Install VMware Workstation
-      echo "*** Installing VMware Workstation"
-      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
-      echo "*** vmware-modconfig"
-      sudo /usr/bin/vmware-modconfig --console --install-all || true
+      #echo "*** Installing VMware Workstation"
+      #sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
 
-      echo "*** /etc/init.d/vmware start"
-      sudo /etc/init.d/vmware start || true
+      #echo "*** Configuring VMware Workstation"
+      #register_vmware_workstation_serial_no "" || exit $?
+      #exit 1
 
-      echo "/etc/init.d/vmware-workstation-server start"
-      sudo /etc/init.d/vmware-workstation-server start || true
+      #echo "*** vmware-modconfig"
+      #sudo /usr/bin/vmware-modconfig --console --install-all || true
 
-      echo "/etc/init.d/vmware-USBArbitrator start"
-      sudo /etc/init.d/vmware-USBArbitrator start || true
+      #echo "*** /etc/init.d/vmware start"
+      #sudo /etc/init.d/vmware start || true
 
-      echo "/usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52"
-      sudo /usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52 || true
+      #echo "/etc/init.d/vmware-workstation-server start"
+      #sudo /etc/init.d/vmware-workstation-server start || true
 
-      echo "*** Configuring VMware Workstation"
-      register_vmware_workstation_serial_no "" || exit $?
+      #echo "/etc/init.d/vmware-USBArbitrator start"
+      #sudo /etc/init.d/vmware-USBArbitrator start || true
 
-      sudo -l
+      #echo "/usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52"
+      #sudo /usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52 || true
 
       # Install Vagrant
       echo "*** Installing Vagrant"
@@ -171,12 +267,12 @@ register_vmware_fusion_serial_no() {
       echo "Checking whether license file was created ($VMFUSION_LICENSE_PATH_PREFIX...)"
       if ls "$VMFUSION_LICENSE_PATH_PREFIX"* > /dev/null 2>&1; then
         echo "Success"
-        exit 0
+        return 0
       else
         echo "Serial no not accepted"
       fi
     done
-    exit 1
+    return 1
   else
     # Registering using given serial number
     echo "Registering using serial no: $SERIAL_NO"
@@ -184,7 +280,7 @@ register_vmware_fusion_serial_no() {
     sudo "$VMFUSION_INIT_TOOL" set "" "" "$SERIAL_NO" || EXIT_CODE=$?
     if [ $EXIT_CODE -eq 0 ] ;  then
       echo "Success"
-      exit 0
+      return 0
     else
       echo "Serial no not accepted"
     fi
@@ -210,12 +306,12 @@ register_vmware_workstation_serial_no() {
       echo "Checking whether license file was created ($VMWARE_LICENSE_PATH_PREFIX...)"
       if ls "$VMWARE_LICENSE_PATH_PREFIX"* > /dev/null 2>&1; then
         echo "Success"
-        exit 0
+        return 0
       else
         echo "Serial no not accepted"
       fi
     done
-    exit 1
+    return 1
   else
     # Registering using given serial number
     echo "Registering using serial no: $SERIAL_NO"
@@ -223,7 +319,7 @@ register_vmware_workstation_serial_no() {
     sudo vmware-license-enter.sh "$SERIAL_NO" "VMWare Workstation" "15.0+" || EXIT_CODE=$?
     if [ $EXIT_CODE -eq 0 ] ;  then
       echo "Success"
-      exit 0
+      return 0
     else
       echo "Serial no not accepted"
     fi

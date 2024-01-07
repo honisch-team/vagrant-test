@@ -38,7 +38,10 @@ jobs:
 
       # Setup build environment
       - name: Setup build environment
+        env:
+          VMWARE_WORKSTATION_VERSION: ${{vars.VMWARE_WORKSTATION_VERSION}}
         run: |
+          echo "VMware Workstation $VMWARE_WORKSTATION_VERSION"
           bash ./build/github_build_helper.sh install-build-tools ${{inputs.virt-provider-id}} ${{runner.os}} build
 
       # Get install image
@@ -53,11 +56,6 @@ jobs:
         run: |
           ls -l ./install-media/install.iso
           shasum -a 1 ./install-media/install.iso
-
-      # Setup tmate session
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       # Create VM and install OS
       - name: Create VM and install OS

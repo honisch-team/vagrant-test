@@ -75,7 +75,7 @@ function GetOriginalIsoPath($isoDir) {
 
 
 # Prepare files for custom install image
-function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath) {
+function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, $installFilesDir) {
     Write-Host '** Preparing files for install image'
 
     # Indicate mounted ISO
@@ -112,7 +112,7 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath) 
         $wimIsMounted = $true
 
         # Update image
-        #UpdateImage $wimMountDir
+        UpdateImage $wimMountDir $installFilesDir
 
         # Wait for unmount
         if ($PauseBeforeWimUnmount) {
@@ -150,22 +150,47 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath) 
 
 
 # Update image
-function UpdateImage($wimMountDir) {
+function UpdateImage($wimMountDir, $installFilesDir) {
 
     # Update registry hive SYSTEM
-    Write-Host '** Updating registry hive SYSTEM'
-    Write-Host '* Loading hive SYSTEM'
-    & reg load HKLM\TempHive "$wimMountDir\Windows\System32\config\SYSTEM" ; FailOnNativeError
-    try {
-        Write-Host '* Setting RealTimeIsUniversal'
-        & reg add 'HKLM\TempHive\ControlSet001\Control\TimeZoneInformation' /v RealTimeIsUniversal /t REG_DWORD /d 1 /f ; FailOnNativeError
-        & reg add 'HKLM\TempHive\ControlSet002\Control\TimeZoneInformation' /v RealTimeIsUniversal /t REG_DWORD /d 1 /f ; FailOnNativeError
-    }
-    finally {
-        Write-Host '* Unloading hive SYSTEM'
-        & reg unload HKLM\TempHive ; FailOnNativeError
-    }
-    Write-Host '** Done: Updating registry hive SYSTEM'
+    #Write-Host '** Updating registry hive SYSTEM'
+    #Write-Host '* Loading hive SYSTEM'
+    #& reg load HKLM\TempHive "$wimMountDir\Windows\System32\config\SYSTEM" ; FailOnNativeError
+    #try {
+    #    Write-Host '* Setting RealTimeIsUniversal'
+    #    & reg add 'HKLM\TempHive\ControlSet001\Control\TimeZoneInformation' /v RealTimeIsUniversal /t REG_DWORD /d 1 /f ; FailOnNativeError
+    #    & reg add 'HKLM\TempHive\ControlSet002\Control\TimeZoneInformation' /v RealTimeIsUniversal /t REG_DWORD /d 1 /f ; FailOnNativeError
+    #}
+    #finally {
+    #    Write-Host '* Unloading hive SYSTEM'
+    #    & reg unload HKLM\TempHive ; FailOnNativeError
+    #}
+    #Write-Host '** Done: Updating registry hive SYSTEM'
+
+    # Integrate updates
+    Write-Host '** KB 3020369: April 2015 servicing stack update for Windows 7'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3156417: May 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3156417-x86_1ca2ad15c00eb72ee4552c4dc3d2b21ad12f54b8.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3125574: Convenience rollup update for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3172605: July 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3179573: August 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3179573-x86_e972000ff6074d1b0530d1912d5f3c7d1b057c4a.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3185278: September 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3185278-x86_fc7486c27ed70826dccefeb2196fc8bb19fc8df5.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3185330: October 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3185330-x86_6322ad8e65ec12be291edeafae79453e51d13a10.msu') ; FailOnNativeError
+
+    Write-Host '** KB 3177467: September 2016 servicing stack update for Windows 7 (v2 2018-10)'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3177467-v2-x86_abd69a188878d93212486213990c8caab4d6ae57.msu') ; FailOnNativeError
 }
 
 
@@ -199,7 +224,7 @@ function Main() {
     $originalIsoPath = GetOriginalIsoPath $InstallFilesDir
 
     # Prepare install image files
-    PrepareInstallImageFiles $isoFilesDir $wimMountDir $originalIsoPath
+    PrepareInstallImageFiles $isoFilesDir $wimMountDir $originalIsoPath $InstallFilesDir
 
     # Create image file
     CreateImageFile $isoFilesDir $OutputIsoPath

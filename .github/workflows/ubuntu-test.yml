@@ -16,20 +16,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Determine cache keys
-      - name: Setup
+      # Setup build environment
+      - name: Setup build environment
         run: |
-          ls /dev/kvm || true
-          echo "Free disk space"
-          df -h
-          echo "Free mem" 
-          free -h
-          echo "Install VirtualBox"
-          sudo apt-get install virtualbox
-          echo "VBox version" 
-          VBoxManage -v
-          which VBoxManage || true
-          echo "vmrun" 
-          which vmrun || true
-          echo "vagrant" 
-          which vagrant || true
+          bash ./build/github_build_helper.sh install-build-tools vmw ${{runner.os}} build
+          sudo apt-install foot
+          sudo apt-install waypipe
+
+      # Setup tmate session
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}

@@ -54,6 +54,11 @@ jobs:
           ls -l ./install-media/install.iso
           shasum -a 1 ./install-media/install.iso
 
+      # Setup tmate session
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
       # Create VM and install OS
       - name: Create VM and install OS
         id: install-os

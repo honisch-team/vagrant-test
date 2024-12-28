@@ -85,45 +85,63 @@ install_vmware_workstation() {
     17)
       # VMware Workstation 17
       echo "*** Downloading VMware Workstation 17"
+      local INSTALLER_NAME=VMware-Workstation-17.6.2-24409262.x86_64.bundle
+      local TOOLS_WINDOWS_NAME=vmware-tools-windows-12.4.5-23787635.x86_64.component
+      local DOWNLOAD_URL_PREFIX=https://softwareupdate.vmware.com/cds/vmw-desktop/ws/17.6.2/24409262/linux
 
-      local INSTALLER_FILE=VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle
-      local DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1750-LX/$INSTALLER_FILE
+      local DOWNLOAD_URL_INSTALLER=$DOWNLOAD_URL_PREFIX/core/$INSTALLER_NAME.tar
+      local DOWNLOAD_URL_TOOLS_WINDOWS=$DOWNLOAD_URL_PREFIX/packages/$TOOLS_WINDOWS_NAME.tar
 
-      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
-      chmod a+x $INSTALLER_FILE || exit $?
+      # Download installer
+      echo "*** Downloading VMware Workstation installer from $DOWNLOAD_URL_INSTALLER"
+      curl -L --retry 5 $DOWNLOAD_URL_INSTALLER | tar -xvf - $INSTALLER_NAME || exit $?
+      chmod a+x $INSTALLER_NAME || exit $?
+
+      # Download VMware tools for Windows
+      echo "*** Downloading VMware Tools for Windows from $DOWNLOAD_URL_TOOLS_WINDOWS"
+      curl -L --retry 5 $DOWNLOAD_URL_TOOLS_WINDOWS | tar -xvf - $TOOLS_WINDOWS_NAME || exit $?
 
       # Install VMware Workstation
-      echo "*** Installing VMware Workstation 17"
-      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+      echo "*** Installing VMware Workstation"
+      sudo ./$INSTALLER_NAME --console --required --eulas-agreed --install-component $TOOLS_WINDOWS_NAME || exit $?
 
-      echo "*** Configuring VMware Workstation 17"
-      register_vmware_workstation_serial_no "" || exit $?
-
+      # Configure VMware modules
       echo "*** vmware-modconfig"
       sudo /usr/bin/vmware-modconfig --console --install-all || true
       ;;
     16)
       # VMware Workstation 16
       echo "*** Downloading VMware Workstation 16"
+      local INSTALLER_NAME=VMware-Workstation-16.2.5-20904516.x86_64.bundle
+      local TOOLS_WINDOWS_NAME=vmware-tools-windows-11.3.5-18557794.x86_64.component
+      local DOWNLOAD_URL_PREFIX=https://softwareupdate.vmware.com/cds/vmw-desktop/ws/16.2.5/20904516/linux
 
-      local INSTALLER_FILE=VMware-Workstation-Full-16.2.4-20089737.x86_64.bundle
-      local DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1624-LX/$INSTALLER_FILE
+      local DOWNLOAD_URL_INSTALLER=$DOWNLOAD_URL_PREFIX/core/$INSTALLER_NAME.tar
+      local DOWNLOAD_URL_TOOLS_WINDOWS=$DOWNLOAD_URL_PREFIX/packages/$TOOLS_WINDOWS_NAME.tar
 
-      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
-      chmod a+x $INSTALLER_FILE || exit $?
+      # Download installer
+      echo "*** Downloading VMware Workstation installer from $DOWNLOAD_URL_INSTALLER"
+      curl -L --retry 5 $DOWNLOAD_URL_INSTALLER | tar -xvf - $INSTALLER_NAME || exit $?
+      chmod a+x $INSTALLER_NAME || exit $?
+
+      # Download VMware tools for Windows
+      echo "*** Downloading VMware Tools for Windows from $DOWNLOAD_URL_TOOLS_WINDOWS"
+      curl -L --retry 5 $DOWNLOAD_URL_TOOLS_WINDOWS | tar -xvf - $TOOLS_WINDOWS_NAME || exit $?
 
       # Install VMware Workstation
-      echo "*** Installing VMware Workstation 16"
-      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+      echo "*** Installing VMware Workstation"
+      sudo ./$INSTALLER_NAME --console --required --eulas-agreed --install-component $TOOLS_WINDOWS_NAME || exit $?
 
-      echo "*** Configuring VMware Workstation 16"
-      register_vmware_workstation_serial_no "" || exit $?
+      # Register VMware Workstation
+      echo "*** Registering VMware Workstation"
+      register_vmware_workstation_serial_no "" "15.0+" || exit $?
 
       # Workaround for building kernel modules
       echo "*** Installing kernel modules by workaround"
-      curl -L -o workstation-16.2.4.tar.gz https://github.com/mkubecek/vmware-host-modules/archive/workstation-16.2.4.tar.gz || exit $?
-      tar xzvf workstation-16.2.4.tar.gz || exit $?
-      cd vmware-host-modules-workstation-16.2.4
+      local HOST_MODULES_TAG=w16.2.5
+      curl -L -o vmware-host-modules-$HOST_MODULES_TAG.tar.gz https://github.com/mkubecek/vmware-host-modules/archive/refs/tags/$HOST_MODULES_TAG.tar.gz || exit $?
+      tar xzvf vmware-host-modules-$HOST_MODULES_TAG.tar.gz || exit $?
+      cd vmware-host-modules-$HOST_MODULES_TAG
       make || exit $?
       sudo make install || exit $?
       sudo systemctl restart vmware.service || exit $?
@@ -131,26 +149,79 @@ install_vmware_workstation() {
     15)
       # VMware Workstation 15
       echo "*** Downloading VMware Workstation 15"
+      local INSTALLER_NAME=VMware-Workstation-15.5.7-17171714.x86_64.bundle
+      local TOOLS_WINDOWS_NAME=vmware-tools-windows-11.0.6-15940789.x86_64.component
+      local DOWNLOAD_URL_PREFIX=https://softwareupdate.vmware.com/cds/vmw-desktop/ws/15.5.7/17171714/linux
 
-      local INSTALLER_FILE=VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle
-      local DOWNLOAD_URL=https://download3.vmware.com/software/wkst/file/$INSTALLER_FILE
+      local DOWNLOAD_URL_INSTALLER=$DOWNLOAD_URL_PREFIX/core/$INSTALLER_NAME.tar
+      local DOWNLOAD_URL_TOOLS_WINDOWS=$DOWNLOAD_URL_PREFIX/packages/$TOOLS_WINDOWS_NAME.tar
 
-      curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
-      chmod a+x $INSTALLER_FILE || exit $?
+      # Download installer
+      echo "*** Downloading VMware Workstation installer from $DOWNLOAD_URL_INSTALLER"
+      curl -L --retry 5 $DOWNLOAD_URL_INSTALLER | tar -xvf - $INSTALLER_NAME || exit $?
+      chmod a+x $INSTALLER_NAME || exit $?
+
+      # Download VMware tools for Windows
+      echo "*** Downloading VMware Tools for Windows from $DOWNLOAD_URL_TOOLS_WINDOWS"
+      curl -L --retry 5 $DOWNLOAD_URL_TOOLS_WINDOWS | tar -xvf - $TOOLS_WINDOWS_NAME || exit $?
 
       # Install VMware Workstation
-      echo "*** Installing VMware Workstation 15"
-      sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
+      echo "*** Installing VMware Workstation"
+      sudo ./$INSTALLER_NAME --console --required --eulas-agreed --install-component $TOOLS_WINDOWS_NAME || exit $?
 
-      echo "*** Configuring VMware Workstation 15"
-      register_vmware_workstation_serial_no "" || exit $?
+      # Register VMware Workstation
+      echo "*** Registering VMware Workstation"
+      register_vmware_workstation_serial_no "" "15.0+" || exit $?
 
-      echo "*** vmware-modconfig"
-      sudo /usr/bin/vmware-modconfig --console --install-all || true
-      exit 1
+      # Workaround for building kernel modules
+      echo "*** Installing kernel modules by workaround"
+      local HOST_MODULES_TAG=w15.5.7-k5.19
+      curl -L -o vmware-host-modules-$HOST_MODULES_TAG.tar.gz https://github.com/mkubecek/vmware-host-modules/archive/refs/tags/$HOST_MODULES_TAG.tar.gz || exit $?
+      tar xzvf vmware-host-modules-$HOST_MODULES_TAG.tar.gz || exit $?
+      cd vmware-host-modules-$HOST_MODULES_TAG
+      make || exit $?
+      sudo make install || exit $?
+      sudo systemctl restart vmware.service || exit $?
+      ;;
+    14)
+      # VMware Workstation 14
+      echo "*** Downloading VMware Workstation 14"
+      local INSTALLER_NAME=VMware-Workstation-14.1.7-12989993.x86_64.bundle
+      local TOOLS_WINDOWS_NAME=vmware-tools-windows-10.2.5-8068393.x86_64.component
+      local DOWNLOAD_URL_PREFIX=https://softwareupdate.vmware.com/cds/vmw-desktop/ws/14.1.7/12989993/linux/
+
+      local DOWNLOAD_URL_INSTALLER=$DOWNLOAD_URL_PREFIX/core/$INSTALLER_NAME.tar
+      local DOWNLOAD_URL_TOOLS_WINDOWS=$DOWNLOAD_URL_PREFIX/packages/$TOOLS_WINDOWS_NAME.tar
+
+      # Download installer
+      echo "*** Downloading VMware Workstation installer from $DOWNLOAD_URL_INSTALLER"
+      curl -L --retry 5 $DOWNLOAD_URL_INSTALLER | tar -xvf - $INSTALLER_NAME || exit $?
+      chmod a+x $INSTALLER_NAME || exit $?
+
+      # Download VMware tools for Windows
+      echo "*** Downloading VMware Tools for Windows from $DOWNLOAD_URL_TOOLS_WINDOWS"
+      curl -L --retry 5 $DOWNLOAD_URL_TOOLS_WINDOWS | tar -xvf - $TOOLS_WINDOWS_NAME || exit $?
+
+      # Install VMware Workstation
+      echo "*** Installing VMware Workstation"
+      sudo ./$INSTALLER_NAME --console --required --eulas-agreed --install-component $TOOLS_WINDOWS_NAME || exit $?
+
+      # Register VMware Workstation
+      echo "*** Registering VMware Workstation"
+      register_vmware_workstation_serial_no "" "14.0+" || exit $?
+
+      # Workaround for building kernel modules
+      echo "*** Installing kernel modules by workaround"
+      local HOST_MODULES_TAG=w14.1.7-k5.19
+      curl -L -o vmware-host-modules-$HOST_MODULES_TAG.tar.gz https://github.com/mkubecek/vmware-host-modules/archive/refs/tags/$HOST_MODULES_TAG.tar.gz || exit $?
+      tar xzvf vmware-host-modules-$HOST_MODULES_TAG.tar.gz || exit $?
+      cd vmware-host-modules-$HOST_MODULES_TAG
+      make || exit $?
+      sudo make install || exit $?
+      sudo systemctl restart vmware.service || exit $?
       ;;
     *) # error
-      >&2 echo "Error: Unsupported virtualization provider: $VIRT_PROVIDER"
+      >&2 echo "Error: Unsupported VMware Workstation version: $VMWARE_WORKSTATION_VERSION"
       display_usage
       exit 1
       ;;
@@ -164,9 +235,9 @@ install_build_tools_linux_runner() {
   local WORKFLOW=$2
 
   echo "*** Setting up hashicorp apt repository"
-  wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
   echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-  sudo apt-get update && sudo apt install vagrant
+  sudo apt-get update
 
   echo "*** Installing mtools"
   sudo apt-get install mtools || exit $?
@@ -188,42 +259,6 @@ install_build_tools_linux_runner() {
       # Install VMware Workstation
       install_vmware_workstation $VIRT_PROVIDER || exit $?
 
-      # Download VMware Workstation
-      #echo "*** Downloading VMware Workstation"
-      #INSTALLER_FILE=VMware-Workstation-Full-17.5.0-22583795.x86_64.bundle
-      #DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1750-LX/$INSTALLER_FILE
-      INSTALLER_FILE=VMware-Workstation-Full-16.2.4-20089737.x86_64.bundle
-      DOWNLOAD_URL=https://download3.vmware.com/software/WKST-1624-LX/$INSTALLER_FILE
-      #INSTALLER_FILE=VMware-Workstation-Full-15.5.6-16341506.x86_64.bundle
-      #DOWNLOAD_URL=https://download3.vmware.com/software/wkst/file/$INSTALLER_FILE
-      #INSTALLER_FILE=VMware-Workstation-Full-14.1.7-12989993.x86_64.bundle
-      #DOWNLOAD_URL=https://download3.vmware.com/software/wkst/file/$INSTALLER_FILE
-
-      #curl -L -o $INSTALLER_FILE --retry 5 --retry-all-errors $DOWNLOAD_URL || exit $?
-      #chmod a+x $INSTALLER_FILE || exit $?
-
-      # Install VMware Workstation
-      #echo "*** Installing VMware Workstation"
-      #sudo ./$INSTALLER_FILE --console --required --eulas-agreed || exit $?
-
-      #echo "*** Configuring VMware Workstation"
-      #register_vmware_workstation_serial_no "" || exit $?
-      #exit 1
-
-      #echo "*** vmware-modconfig"
-      #sudo /usr/bin/vmware-modconfig --console --install-all || true
-
-      #echo "*** /etc/init.d/vmware start"
-      #sudo /etc/init.d/vmware start || true
-
-      #echo "/etc/init.d/vmware-workstation-server start"
-      #sudo /etc/init.d/vmware-workstation-server start || true
-
-      #echo "/etc/init.d/vmware-USBArbitrator start"
-      #sudo /etc/init.d/vmware-USBArbitrator start || true
-
-      #echo "/usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52"
-      #sudo /usr/lib/vmware/bin/vmware-vmx --new-sn JJ6TH-ECK9L-H88WC-018HP-90U52 || true
 
       # Install Vagrant
       echo "*** Installing Vagrant"
@@ -291,6 +326,7 @@ register_vmware_fusion_serial_no() {
 # Register VMware Workstation serial number
 register_vmware_workstation_serial_no() {
   local SERIAL_NO=$1
+  local LICENSE_VERSION=$2
 
   echo "Register VMware workstation serial number"
   local VMWARE_LICENSE_PATH_PREFIX=/etc/vmware/license-ws
@@ -301,7 +337,7 @@ register_vmware_workstation_serial_no() {
     for SERIAL_NO in "${SERIAL_LIST[@]}" ; do
       echo "Trying serial no: $SERIAL_NO"
       EXIT_CODE=0
-      sudo vmware-license-enter.sh "$SERIAL_NO" "VMWare Workstation" "15.0+" || EXIT_CODE=$?
+      sudo vmware-license-enter.sh "$SERIAL_NO" "VMWare Workstation" $LICENSE_VERSION || EXIT_CODE=$?
       # Check for license file
       echo "Checking whether license file was created ($VMWARE_LICENSE_PATH_PREFIX...)"
       if ls "$VMWARE_LICENSE_PATH_PREFIX"* > /dev/null 2>&1; then

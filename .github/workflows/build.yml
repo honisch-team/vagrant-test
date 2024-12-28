@@ -94,13 +94,9 @@ jobs:
       matrix:
         include:
           - virt-provider-id: vbx
-            runner-name: macos-12
+            runner-name: ubuntu-latest
           - virt-provider-id: vmw
-            runner-name: macos-12
-          - virt-provider-id: vbx
-            runner-name: ubuntu-latest-m
-          - virt-provider-id: vmw
-            runner-name: ubuntu-latest-m
+            runner-name: ubuntu-latest
 
     # Reference reusable workflow to do the actual building and testing
     uses: ./.github/workflows/sub-build-and-test.yml

@@ -1,7 +1,7 @@
 #Requires -Version 7
 
 param(
-    # Csv file containing downloads
+    # CSV file containing downloads
     [Parameter(Mandatory = $true)]
     [string] $DownloadsCsvFile,
 
@@ -153,19 +153,22 @@ function DownloadInstallFiles($csvPath, $outputDir, $cleanup, $ignoreHashMismatc
     $errorsOccurred = $false
     foreach ($row in $csv) {
         # Ignore all rows starting with #
-        if ($row.Comment -notmatch '^\s*#') {
-            $localFilename = Split-Path -Leaf $row.Url
-            $requiredDownloads[$localFilename] = $true
-            $localPath = Join-Path $outputDir $localFilename
-            if ($verifyOnly) {
-                if (-not (VerifyFile $row.Comment $localPath $row.Sha1)) {
-                    $errorsOccurred = $true
-                }
+        if ($row.Comment -match '^\s*#') {
+            continue
+        }
+
+        # Process entry
+        $localFilename = Split-Path -Leaf $row.Url
+        $requiredDownloads[$localFilename] = $true
+        $localPath = Join-Path $outputDir $localFilename
+        if ($verifyOnly) {
+            if (-not (VerifyFile $row.Comment $localPath $row.Sha1)) {
+                $errorsOccurred = $true
             }
-            else {
-                if (-not (DownloadFile $row.Comment $row.Url $localPath $row.Sha1 $ignoreHashMismatch $verifyOnly)) {
-                    $errorsOccurred = $true
-                }
+        }
+        else {
+            if (-not (DownloadFile $row.Comment $row.Url $localPath $row.Sha1 $ignoreHashMismatch $verifyOnly)) {
+                $errorsOccurred = $true
             }
         }
     }

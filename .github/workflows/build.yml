@@ -73,7 +73,7 @@ jobs:
       - name: Create install image
         if: steps.get-cached-install-image.outputs.cache-hit != 'true'
         shell: pwsh
-        run: ./install-media/create_install_image.ps1 -InstallFilesDir ./install-media/downloads -WorkDir ./install-media/work -Output ./install-media/install.iso
+        run: ./install-media/create_install_image.ps1 -DownloadsCsvFile ./install-media/downloads.csv -InstallFilesDir ./install-media/downloads -WorkDir ./install-media/work -Output ./install-media/install.iso
 
       # Upload custom install image artifact
       - name: Upload install image
@@ -82,6 +82,15 @@ jobs:
           name: install-media
           path: ./install-media/install.iso
           retention-days: 5
+
+      # Upload logs
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Logs_CreateInstallMedia
+          path: |
+            C:\Windows\Logs\DISM\dism.log
 
   # Build and test Vagrant box
   build-and-test:
@@ -93,14 +102,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - virt-provider-id: vbx
-            runner-name: macos-14
-          - virt-provider-id: vmw
-            runner-name: macos-14
+          # - virt-provider-id: vbx
+          #   runner-name: macos-14
+          # - virt-provider-id: vmw
+          #   runner-name: macos-14
           - virt-provider-id: vbx
             runner-name: ubuntu-latest
-          - virt-provider-id: vmw
-            runner-name: ubuntu-latest
+          # - virt-provider-id: vmw
+          #   runner-name: ubuntu-latest
 
     # Reference reusable workflow to do the actual building and testing
     uses: ./.github/workflows/sub-build-and-test.yml

@@ -94,6 +94,10 @@ jobs:
       matrix:
         include:
           - virt-provider-id: vbx
+            runner-name: macos-14
+          - virt-provider-id: vmw
+            runner-name: macos-14
+          - virt-provider-id: vbx
             runner-name: ubuntu-latest
           - virt-provider-id: vmw
             runner-name: ubuntu-latest

@@ -16,7 +16,6 @@ on:
         type: string
 
 jobs:
-
   # Build Vagrant box
   build:
     runs-on: ${{inputs.runner-name}}
@@ -72,19 +71,17 @@ jobs:
       #    brew install --cask vmware-fusion
       #    bash ./build/github_build_helper.sh configure-vmware-fusion
       #    make -f ./box/Makefile clean install_os_vm.${{inputs.virt-provider-id}}
-
       # Get logs
       #- name: Get VM logs
       #  if: steps.install-os.outcome != 'success'
       #  run: |
       #    echo "Outcome of previous step: ${{steps.install-os.outcome}}"
       #    exit 1
-
       # Update VM
       - name: Update VM
         timeout-minutes: 300
-        #run: make -f ./box/Makefile update_vm_nodeps.${{inputs.virt-provider-id}}
-        run: make -f ./box/Makefile update_vm_nodeps.${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
+        run: make -f ./box/Makefile update_vm_nodeps.${{inputs.virt-provider-id}}
+        #run: make -f ./box/Makefile update_vm_nodeps.${{inputs.virt-provider-id}} UPDATE_VM_OPTS="--no-install-wu --no-cleanup-dism --no-zerodisk"
 
       # Package box
       - name: Build Vagrant box
@@ -107,7 +104,6 @@ jobs:
           path: |
             ./vm-base/**/*.log
             /var/log/vmware*.log
-
 
   # Test Vagrant box
   test:

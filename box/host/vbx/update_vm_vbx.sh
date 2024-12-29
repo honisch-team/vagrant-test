@@ -135,6 +135,11 @@ VM_WORK_DIR=$5
 echo "**************************************"
 echo "*** Updating VM \"$VM_NAME\" after operating system install"
 echo "**************************************"
+echo "User: $VM_USER"
+echo "Password: $VM_PASSWORD"
+echo "Source dir: $VM_SRC_DIR"
+echo "Work dir: $VM_WORK_DIR"
+echo ""
 VM_GUEST_PARAMS=()
 if [ "$OPT_NO_INSTALL_WU" -ne 0 ] ; then
   echo "Don't install Windows Updates"
@@ -177,11 +182,10 @@ waitUntilVmStartupComplete $VM_NAME
 
 # Run update
 echo "Copying update files from \"$VM_SRC_DIR\" to VM..."
-VBoxManage guestcontrol $VM_NAME mkdir --username=$VM_USER --password=$VM_PASSWORD "C:\\temp" || echo "Ignoring error"
-VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp" $VM_WORK_DIR
+VBoxManage guestcontrol $VM_NAME mkdir --parents --username=$VM_USER --password=$VM_PASSWORD "C:\\temp\\work" || echo "Ignoring error"
+VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp\\work" $VM_WORK_DIR
 
 echo "Running update script..."
-VM_SRC_DIR_BASE=$(basename $VM_WORK_DIR)
 UPDATE_SCRIPT_FINISHED=0
 MAX_UPDATE_LOOPS=20
 while [ $UPDATE_SCRIPT_FINISHED -eq 0 ]
@@ -196,7 +200,7 @@ do
   # Run script
   echo "Running run_update.bat ($MAX_UPDATE_LOOPS runs left before abort)"
   EXIT_CODE=0
-  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
+  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe cmd.exe -- /c "C:\\Temp\\work\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
   echo "Script returned $EXIT_CODE (VBoxManage adds 32 to non-zero script exit codes)"
   case "$EXIT_CODE" in
   0) # Script exit code 0: Success, update finished

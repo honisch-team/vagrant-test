@@ -36,7 +36,7 @@ Set-StrictMode -Version Latest
 $INSTALLER_WIM_INDEX = 1
 
 
-# Fail on on native error
+# Fail on native error
 function FailOnNativeError() {
     if ($LASTEXITCODE -ne 0) {
         throw

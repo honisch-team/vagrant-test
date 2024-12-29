@@ -137,6 +137,12 @@ VM_WORK_DIR=$6
 echo "**************************************"
 echo "*** Updating VM \"$VM_NAME\" after operating system install"
 echo "**************************************"
+echo "Base dir: $VM_BASE_DIR"
+echo "User: $VM_USER"
+echo "Password: $VM_PASSWORD"
+echo "Source dir: $VM_SRC_DIR"
+echo "Work dir: $VM_WORK_DIR"
+echo ""
 VM_GUEST_PARAMS=()
 if [ "$OPT_NO_INSTALL_WU" -ne 0 ] ; then
   echo "Don't install Windows Updates"
@@ -186,7 +192,6 @@ vmrun -gu $VM_USER -gp $VM_PASSWORD createDirectoryInGuest $VM_VMX "C:\\temp\\wo
 vmrun -gu $VM_USER -gp $VM_PASSWORD CopyFileFromHostToGuest $VM_VMX $VM_WORK_DIR "C:\\Temp\\work"
 
 echo "Running update script..."
-VM_SRC_DIR_BASE=$(basename $VM_WORK_DIR)
 UPDATE_SCRIPT_FINISHED=0
 MAX_UPDATE_LOOPS=20
 while [ $UPDATE_SCRIPT_FINISHED -eq 0 ]
@@ -201,7 +206,7 @@ do
   # Run script
   echo "Running run_update.bat ($MAX_UPDATE_LOOPS runs left before abort)"
   EXIT_CODE=0
-  runCommandInVm $VM_VMX "C:\\Temp\\$VM_SRC_DIR_BASE\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
+  runCommandInVm $VM_VMX "C:\\Temp\\work\\run_update.bat" ${VM_GUEST_PARAMS[@]} || EXIT_CODE=$?
   echo "Script returned $EXIT_CODE (function adds 32 to non-zero script exit codes)"
   case "$EXIT_CODE" in
   0) # Script exit code 0: Success, update finished

@@ -20,12 +20,16 @@ on:
         type: string
 
 jobs:
-
   # Test Vagrant box
   test:
     runs-on: ${{inputs.runner-name}}
     name: test_${{inputs.virt-provider-id}}_${{inputs.test-run-id}}-${{inputs.runner-name}}
     steps:
+      # Free Ubuntu disk space
+      - name: Free Ubuntu Disk Space
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+
       # Check out
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,4 +69,3 @@ jobs:
           name: Logs_Test_${{inputs.virt-provider-id}}_${{inputs.test-run-id}}_${{inputs.runner-name}}
           path: |
             ./log/test
-

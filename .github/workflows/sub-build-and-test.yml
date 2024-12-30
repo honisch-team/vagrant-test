@@ -21,6 +21,11 @@ jobs:
     runs-on: ${{inputs.runner-name}}
     name: build_${{inputs.virt-provider-id}}_${{inputs.runner-name}}
     steps:
+      # Free Ubuntu disk space
+      - name: Free Ubuntu Disk Space
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+
       # Check out
       - name: Checkout
         uses: actions/checkout@v4

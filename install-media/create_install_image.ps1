@@ -9,10 +9,6 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $WorkDir,
 
-    # CSV file containing downloads
-    [Parameter(Mandatory = $true)]
-    [string] $DownloadsCsvFile,
-
     # Path for output ISO file
     [Parameter(Mandatory = $true)]
     [string] $OutputIsoPath,
@@ -78,7 +74,7 @@ function GetOriginalIsoPath($isoDir) {
 
 
 # Prepare files for custom install image
-function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, $installFilesDir, $downloadsCsvFile) {
+function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, $installFilesDir) {
     Write-Host '** Preparing files for install image'
 
     # Indicate mounted ISO
@@ -118,7 +114,7 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, 
         $wimIsMounted = $true
 
         # Update image
-        UpdateImage $wimMountDir $installFilesDir $isoFilesDir $downloadsCsvFile
+        UpdateImage $wimMountDir $installFilesDir
 
         # Wait for unmount
         if ($PauseBeforeWimUnmount) {
@@ -164,40 +160,50 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, 
 
 
 # Update image
-function UpdateImage($wimMountDir, $installFilesDir, $isoFilesDir, $downloadsCsvFile) {
+function UpdateImage($wimMountDir, $installFilesDir) {
 
-    Write-Host "Parsing $downloadsCsvFile"
+    # Integrate updates
+    Write-Host '** KB 3020369: April 2015 servicing stack update for Windows 7'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
 
-    # Copy CSV file to iso post-install dir
-    $isoPostInstallDir = Join-Path $isoFilesDir 'post_install'
-    # Make sure directory exists
-    mkdir $isoPostInstallDir -Force | Out-Null
-    # Copy CSV file
-    Copy-Item $downloadsCsvFile (Join-Path $isoPostInstallDir 'downloads.csv')
+    #Write-Host '** KB 3156417: May 2016 update rollup for Windows 7 SP1'
+    #& Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3156417-x86_1ca2ad15c00eb72ee4552c4dc3d2b21ad12f54b8.msu') ; FailOnNativeError
 
-    # Open CSV file
-    $csv = Import-Csv $downloadsCsvFile -Delimiter ';'
+    Write-Host '** KB 3125574: Convenience rollup update for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
 
-    # Process entries
-    foreach ($row in $csv) {
-        # Ignore all rows starting with #
-        if ($row.Comment -match '^\s*#') {
-            continue
-        }
+    Write-Host '** KB 3172605: July 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu') ; FailOnNativeError
 
-        # Process entry
-        $localFilename = Split-Path -Leaf $row.Url
+    Write-Host '** KB 3179573: August 2016 update rollup for Windows 7 SP1'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3179573-x86_e972000ff6074d1b0530d1912d5f3c7d1b057c4a.msu') ; FailOnNativeError
 
-        # Integrate update
-        if ($row.Type -eq 'ISO_INTEGRATE') {
-            Write-Host "** Integrate update: $($row.Comment)"
-            & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir $localFilename) ; FailOnNativeError
-        }
-        elseif ($row.Type -eq 'POST_INSTALL') {
-            Write-Host "** Copy to ISO: $($row.Comment) / $localFilename"
-            Copy-Item $(Join-Path $installFilesDir $localFilename) $isoPostInstallDir
-        }
-    }
+    Write-Host '** KB 4490628: March 2019 servicing stack update for Windows 7'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4490628-x86_3cdb3df55b9cd7ef7fcb24fc4e237ea287ad0992.msu') ; FailOnNativeError
+
+    Write-Host '** KB 4474419: SHA-2 code signing support update for Windows 7'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4474419-v3-x86_0f687d50402790f340087c576886501b3223bec6.msu') ; FailOnNativeError
+
+    Write-Host '** KB 4516065: September 2019 Security Monthly Quality Rollup for Windows 7'
+    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4516065-x86_662c716c417149d39d5787b1ff849bf7e5c786c3.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 4598279: January 2021 Security Monthly Quality Rollup for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4598279-x86_a095825adcf1eeae8943bd3ff50f2a87e6100817.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 3185278: September 2016 update rollup for Windows 7 SP1'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3185278-x86_fc7486c27ed70826dccefeb2196fc8bb19fc8df5.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 3185330: October 2016 update rollup for Windows 7 SP1'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3185330-x86_6322ad8e65ec12be291edeafae79453e51d13a10.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 3177467: September 2018 servicing stack update for Windows 7 (v2 2018-10)'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3177467-v2-x86_abd69a188878d93212486213990c8caab4d6ae57.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 4516655: September 2019 servicing stack update for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4516655-x86_47655670362e023aa10ab856a3bda90aabeacfe6.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 4516065: September 2019 Security Monthly Quality Rollup for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4516065-x86_662c716c417149d39d5787b1ff849bf7e5c786c3.msu') ; FailOnNativeError
 }
 
 
@@ -231,7 +237,7 @@ function Main() {
     $originalIsoPath = GetOriginalIsoPath $InstallFilesDir
 
     # Prepare install image files
-    PrepareInstallImageFiles $isoFilesDir $wimMountDir $originalIsoPath $InstallFilesDir $DownloadsCsvFile
+    PrepareInstallImageFiles $isoFilesDir $wimMountDir $originalIsoPath $InstallFilesDir
 
     # Create image file
     CreateImageFile $isoFilesDir $OutputIsoPath

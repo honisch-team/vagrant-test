@@ -1,17 +1,17 @@
 #Requires -Version 7
 
 param(
-    # CSV file containing downloads
+    # CSV file containing downloads list
     [Parameter(Mandatory = $true)]
-    [string] $DownloadsCsvFile,
+    [string] $Downloads,
 
     # Directory for downloads
     [Parameter(Mandatory = $true)]
     [string] $OutputDir,
 
-    # Delete extra files/folders from downloads dir
+    # Delete extra files/folders from output dir
     [Parameter(Mandatory = $false)]
-    [switch] $CleanupDownloads,
+    [switch] $Cleanup,
 
     # Ignore hash mismatch
     [Parameter(Mandatory = $false)]
@@ -134,9 +134,14 @@ function VerifyFile($comment, $filePath, $sha1) {
 }
 
 
-# Download install files
-function DownloadInstallFiles($csvPath, $outputDir, $cleanup, $ignoreHashMismatch, $verifyOnly) {
-    Write-Host "*** Downloading required install files to $outputDir"
+# Download files
+function DownloadFiles($csvPath, $outputDir, $cleanup, $ignoreHashMismatch, $verifyOnly) {
+    if ($verifyOnly) {
+        Write-Host "*** Verifying files in $outputDir"
+    }
+    else {
+        Write-Host "*** Downloading files to $outputDir"
+    }
 
     # Make sure output dir exists
     mkdir $outputDir -Force | Out-Null
@@ -191,16 +196,19 @@ function DownloadInstallFiles($csvPath, $outputDir, $cleanup, $ignoreHashMismatc
         Write-Host '** Done: Cleaning up downloads dir'
     }
 
-    Write-Host "** Done: Downloading required install files to $outputDir"
+    if ($verifyOnly) {
+        Write-Host "*** Done: Verifying files in $outputDir"
+    }
+    else {
+        Write-Host "*** Done: Downloading files to $outputDir"
+    }
 }
-
-
 
 
 # Main function
 function Main() {
     # Download install files
-    DownloadInstallFiles $DownloadsCsvFile $OutputDir $CleanupDownloads $IgnoreHashMismatch $VerifyOnly
+    DownloadFiles $Downloads $OutputDir $Cleanup $IgnoreHashMismatch $VerifyOnly
 
     # Finished
     Write-Host '*** Done'

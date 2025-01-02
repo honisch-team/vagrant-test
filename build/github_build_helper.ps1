@@ -4,17 +4,21 @@ param(
     [Parameter(Mandatory = $true, ParameterSetName = 'InstallAdkDeploymentTools')]
     [switch] $InstallAdkDeploymentTools,
 
-    # Get install media cache keys
-    [Parameter(Mandatory = $true, ParameterSetName = 'GetInstallMediaCacheKeys')]
-    [switch] $GetInstallMediaCacheKeys,
+    # Get install files cache keys
+    [Parameter(Mandatory = $true, ParameterSetName = 'GetInstallFilesCacheKeys')]
+    [switch] $GetInstallFilesCacheKeys,
 
-    # Downloads file
-    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallMediaCacheKeys')]
-    [string] $DownloadsCsvFile,
+    # Download list for install image
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallFilesCacheKeys')]
+    [string] $DownloadsInstallImage,
 
-    # Script file
-    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallMediaCacheKeys')]
-    [string] $ScriptFile
+    # Download list for updates
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallFilesCacheKeys')]
+    [string] $DownloadsUpdate,
+
+    # Build install image script file
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true, ParameterSetName = 'GetInstallFilesCacheKeys')]
+    [string] $BuildInstallImage
 )
 
 
@@ -48,52 +52,57 @@ function InstallAdkDeploymentTools() {
 }
 
 
-# Get cache keys for install media
-function GetInstallMediaCacheKeys($csvFile, $scriptFile) {
+# Get cache keys for install files
+function GetInstallFilesCacheKeys($csvInstallImageFiles, $csvUpdateFiles, $scriptFile) {
     Write-Host '*** Calculating install media cache keys'
-
-    # Get install files download data as string
-    $installFilesStr = GetInstallMediaDownloadData $csvFile
 
     # Get install media script data as string
     $scriptStr = Get-Content -Raw $scriptFile
 
-    # Get install files hash
-    $installFilesHash = GetHashOfString $installFilesStr
+    # Get install imagefiles hash
+    $installImageFilesHash = GetDownloadsListHash $csvInstallImageFiles
+
+    # Get update files hash
+    $updateFilesHash = GetDownloadsListHash $csvUpdateFiles
 
     # Get script data hash
     $scriptHash = GetHashOfString $scriptStr
 
     # Install image hash is combined hash of downloads hash and script hash
-    $installImageHash = GetHashOfString "$installFilesHash`r`n$scriptHash"
+    $installImageHash = GetHashOfString "$installImageFilesHash`r`n$scriptHash"
 
     # Return cache keys
-    Write-Output @{ installFilesKey = $installFilesHash; installImageKey = $installImageHash }
+    return @{
+        installImageFilesKey  = $installImageFilesHash
+        customInstallImageKey = $installImageHash
+        updateFilesKey        = $updateFilesHash
+    }
 }
 
 
-# Get install media download data (filtered CSV data)
-function GetInstallMediaDownloadData($csvFile) {
+# Get hash of downloads list
+function GetDownloadsListHash($csvFile) {
 
     Write-Host "Parsing $csvFile"
 
-    # Open CSV file
+    # Open downloads file
     $csv = Import-Csv $csvFile -Delimiter ';'
     $lines = [System.Collections.ArrayList]::new()
 
     # Generate data to hash
     foreach ($row in $csv) {
-        # Ignore all rows starting with #
-        if ($row.Comment -notmatch '^\s*#') {
-            # Ignore "Comment" column when hashing
-            [void]$lines.Add("$($row.Url);$($row.Sha1)")
+        # Ignore commented rows
+        if ($row.Comment -match '^\s*#') {
+            continue
         }
+        # Ignore "Comment" column
+        [void]$lines.Add("$($row.Url);$($row.Sha1)")
     }
 
     # Combine into single string
     $str = $lines | Join-String -Separator "`r`n"
 
-    return $str
+    return (GetHashOfString $str)
 }
 
 
@@ -135,9 +144,9 @@ function Main {
         InstallAdkDeploymentTools
     }
 
-    # Get install media cache keys
-    if ($GetInstallMediaCacheKeys) {
-        return GetInstallMediaCacheKeys $DownloadsCsvFile $ScriptFile
+    # Get install files cache keys
+    if ($GetInstallFilesCacheKeys) {
+        return GetInstallFilesCacheKeys $DownloadsInstallImage $DownloadsUpdate $BuildInstallImage
     }
 }
 

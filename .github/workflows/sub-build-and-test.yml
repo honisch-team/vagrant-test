@@ -55,11 +55,18 @@ jobs:
           name: install-media
           path: ./install-media/
 
-      # Check install image
-      - name: Check install image
-        run: |
-          ls -l ./install-media/install.iso
-          shasum -a 1 ./install-media/install.iso
+      # # Check install image
+      # - name: Check install image
+      #   run: |
+      #     ls -l ./install-media/install.iso
+      #     shasum -a 1 ./install-media/install.iso
+
+      # Get update files
+      - name: Get update files
+        uses: actions/download-artifact@v4
+        with:
+          name: update-files
+          path: ./install-media/update-files
 
       # Create VM and install OS
       - name: Create VM and install OS

@@ -162,15 +162,19 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, 
 # Update image
 function UpdateImage($wimMountDir, $installFilesDir) {
 
-    # # Integrate updates
+    # Integrate updates
+
+    # Write-Host '** KB 2670838: Platform update for Windows 7 SP1'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb2670838-x86_984b8d122a688d917f81c04155225b3ef31f012e.msu') ; FailOnNativeError
+
     # Write-Host '** KB 3020369: April 2015 servicing stack update for Windows 7'
+    # & Dism.exe /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 3125574: Convenience rollup update for Windows 7 SP1'
     # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
 
     # #Write-Host '** KB 3156417: May 2016 update rollup for Windows 7 SP1'
     # #& Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3156417-x86_1ca2ad15c00eb72ee4552c4dc3d2b21ad12f54b8.msu') ; FailOnNativeError
-
-    # Write-Host '** KB 3125574: Convenience rollup update for Windows 7 SP1'
-    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
 
     # Write-Host '** KB 3172605: July 2016 update rollup for Windows 7 SP1'
     # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu') ; FailOnNativeError

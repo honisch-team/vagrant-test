@@ -157,6 +157,28 @@ if %ERRORLEVEL% equ 3010 (
   if %ERRORLEVEL% neq 0 goto error
 )
 
+rem KB 982670: Microsoft .NET Framework 4 Client Profile for Windows 7
+echo.
+echo *** IKB 982670: Microsoft .NET Framework 4 Client Profile for Windows 7
+wusa "%MYDIR%\windows6.1-kb958488-v6001-x86_c4f8fca1279b823894ca6b19a05f420da26979fa.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem KB 4503548: Microsoft .NET Framework 4.8 for Windows 7
+echo.
+echo *** Installing KB 4503548: Microsoft .NET Framework 4.8 for Windows 7
+"%MYDIR%\NDP48-x86-x64-AllOS-ENU.exe" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
 rem Install KB 2729094: IE11 prerequisite: Update for the Segoe UI symbol font
 echo.
 echo *** Installing KB 2729094: IE11 prerequisite: Update for the Segoe UI symbol font

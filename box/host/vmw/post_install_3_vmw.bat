@@ -9,11 +9,11 @@ call :log "*** VMware Post Install Script 3"
 call :log "*****************************"
 
 call :log
-call :log "*** Register "on_logon_vmw" script"
-call :log "*** Running: copy /Y "%MYDIR%\on_logon_vmw.bat" "C:\Windows\Temp""
-copy /Y "%MYDIR%\on_logon_vmw.bat" "C:\Windows\Temp" || goto error
-call :log "*** Running: reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v on_logon_vmw /t REG_SZ /d "\"C:\Windows\Temp\on_logon_vmw.bat\"" /f"
-reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v on_logon_vmw /t REG_SZ /d "\"C:\Windows\Temp\on_logon_vmw.bat\"" /f
+call :log "*** Register "on_login_vmw" script"
+call :log "*** Running: copy /Y "%MYDIR%\on_login_vmw.bat" "C:\Windows\Temp""
+copy /Y "%MYDIR%\on_login_vmw.bat" "C:\Windows\Temp" || goto error
+call :log "*** Running: reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v on_login_vmw /t REG_SZ /d "\"C:\Windows\Temp\on_login_vmw.bat\"" /f"
+reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v on_login_vmw /t REG_SZ /d "\"C:\Windows\Temp\on_login_vmw.bat\"" /f
 
 call :log
 call :log "*** Signal end of OS install"

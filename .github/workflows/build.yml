@@ -55,9 +55,9 @@ jobs:
         shell: pwsh
         run: ./install-media/download_files.ps1 -Downloads ./install-media/downloads_install_image.csv -OutputDir ./install-media/install-image-files -Cleanup
 
-      # Verify install files
-      - name: Verify install files
-        id: verify-install-files
+      # Verify install image files
+      - name: Verify install image files
+        id: verify-install-image-files
         if: (steps.get-cached-custom-install-image.outputs.cache-hit != 'true') && (steps.get-cached-install-image-files.outputs.cache-hit == 'true')
         shell: pwsh
         run: ./install-media/download_files.ps1 -DownloadsCsvFile ./install-media/downloads_install_image.csv -OutputDir ./install-media/install-image-files -VerifyOnly
@@ -140,9 +140,9 @@ jobs:
           # - virt-provider-id: vmw
           #   runner-name: macos-14
           - virt-provider-id: vbx
-            runner-name: ubuntu-latest
+            runner-name: ubuntu-22.04
           # - virt-provider-id: vmw
-          #   runner-name: ubuntu-latest
+          #   runner-name: ubuntu-22.04
 
     # Reference reusable workflow to do the actual building and testing
     uses: ./.github/workflows/sub-build-and-test.yml

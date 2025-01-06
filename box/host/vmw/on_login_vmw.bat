@@ -9,18 +9,18 @@ echo *****************************
 
 echo.
 echo *** Signal user login
-"%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.user_logged_in y"
+"%ProgramFiles%\VMware\VMware Tools\rpctool.exe" "info-set guestinfo.user_logged_in y" 
 
 echo.
 echo *****************************
-echo *** Success: Installation finished
+echo *** Success: VMware On Login Script
 echo *****************************
 goto end
 
 :error
 echo.
 echo *****************************
-echo *** ERROR, installation aborted (%ERRORLEVEL%)
+echo *** ERROR: VMware On Login Script (%ERRORLEVEL%)
 echo *****************************
 
 :end

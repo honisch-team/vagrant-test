@@ -112,7 +112,7 @@ KB4474419_URL=https://catalog.s.download.windowsupdate.com/c/msdownload/update/s
 
 # Provide scripts
 cp $SCRIPT_DIR/post_install_*vmw.bat $VM_INSTALL_FILES_SRC_DIR/
-cp $SCRIPT_DIR/on_logon_vmw.bat $VM_INSTALL_FILES_SRC_DIR/
+cp $SCRIPT_DIR/on_login_vmw.bat $VM_INSTALL_FILES_SRC_DIR/
 
 # Create iso from install files dir
 echo "Creating iso image containing additional install files..."

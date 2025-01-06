@@ -162,30 +162,37 @@ function PrepareInstallImageFiles($isoFilesDir, $wimMountDir, $originalIsoPath, 
 # Update image
 function UpdateImage($wimMountDir, $installFilesDir) {
 
-    # Integrate updates
-    Write-Host '** KB 3020369: April 2015 servicing stack update for Windows 7'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
+    # # Integrate updates
+    # Write-Host '** KB 3020369: April 2015 servicing stack update for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
 
-    #Write-Host '** KB 3156417: May 2016 update rollup for Windows 7 SP1'
-    #& Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3156417-x86_1ca2ad15c00eb72ee4552c4dc3d2b21ad12f54b8.msu') ; FailOnNativeError
+    # #Write-Host '** KB 3156417: May 2016 update rollup for Windows 7 SP1'
+    # #& Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3156417-x86_1ca2ad15c00eb72ee4552c4dc3d2b21ad12f54b8.msu') ; FailOnNativeError
 
-    Write-Host '** KB 3125574: Convenience rollup update for Windows 7 SP1'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
+    # Write-Host '** KB 3125574: Convenience rollup update for Windows 7 SP1'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu') ; FailOnNativeError
 
-    Write-Host '** KB 3172605: July 2016 update rollup for Windows 7 SP1'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu') ; FailOnNativeError
+    # Write-Host '** KB 3172605: July 2016 update rollup for Windows 7 SP1'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3172605-x86_ae03ccbd299e434ea2239f1ad86f164e5f4deeda.msu') ; FailOnNativeError
 
-    Write-Host '** KB 3179573: August 2016 update rollup for Windows 7 SP1'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3179573-x86_e972000ff6074d1b0530d1912d5f3c7d1b057c4a.msu') ; FailOnNativeError
+    # Write-Host '** KB 3179573: August 2016 update rollup for Windows 7 SP1'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb3179573-x86_e972000ff6074d1b0530d1912d5f3c7d1b057c4a.msu') ; FailOnNativeError
 
-    Write-Host '** KB 4490628: March 2019 servicing stack update for Windows 7'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4490628-x86_3cdb3df55b9cd7ef7fcb24fc4e237ea287ad0992.msu') ; FailOnNativeError
+    # Write-Host '** KB 4490628: March 2019 servicing stack update for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4490628-x86_3cdb3df55b9cd7ef7fcb24fc4e237ea287ad0992.msu') ; FailOnNativeError
 
-    Write-Host '** KB 4474419: SHA-2 code signing support update for Windows 7'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4474419-v3-x86_0f687d50402790f340087c576886501b3223bec6.msu') ; FailOnNativeError
+    # Write-Host '** KB 4474419: SHA-2 code signing support update for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4474419-v3-x86_0f687d50402790f340087c576886501b3223bec6.msu') ; FailOnNativeError
 
-    Write-Host '** KB 4516065: September 2019 Security Monthly Quality Rollup for Windows 7'
-    & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4516065-x86_662c716c417149d39d5787b1ff849bf7e5c786c3.msu') ; FailOnNativeError
+    # Write-Host '** KB 4534310: January 2020 Security Monthly Quality Rollup for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4534310-x86_887a5caab59437e8f23aa5a4608950455bb37537.msu') ; FailOnNativeError
+
+    # Write-Host '** KB 4536952: January 2020 Servicing Stack Update for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4536952-x86_f3b49481187651f64f13a0369c86ad7caa83b190.msu') ; FailOnNativeError
+
+
+    # Write-Host '** KB 4516065: September 2019 Security Monthly Quality Rollup for Windows 7'
+    # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4516065-x86_662c716c417149d39d5787b1ff849bf7e5c786c3.msu') ; FailOnNativeError
 
     # Write-Host '** KB 4598279: January 2021 Security Monthly Quality Rollup for Windows 7'
     # & Dism /Image:$wimMountDir /Add-Package /PackagePath:$(Join-Path $installFilesDir 'windows6.1-kb4598279-x86_a095825adcf1eeae8943bd3ff50f2a87e6100817.msu') ; FailOnNativeError

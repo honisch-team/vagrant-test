@@ -91,3 +91,14 @@ waitUntilVmStartupComplete() {
   sleep 5
   echo "VM startup complete"
 }
+
+
+# Wait for VM user to login
+waitUntilVmUserLoggedIn() {
+  local VM_NAME=$1
+
+  echo "Waiting for user to login..."
+  VBoxManage guestproperty wait $VM_NAME "vm_user_logon" --timeout 600000 --fail-on-timeout || return 1
+  sleep 5
+  echo "VM user logged in"
+}

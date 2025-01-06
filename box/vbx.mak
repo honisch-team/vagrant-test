@@ -27,7 +27,7 @@ install_os_vm_nodeps.vbx: create_vm.vbx
 # Update VirtualBox VM after OS install (no prerequisites)
 .PHONY: update_vm_nodeps.vbx
 update_vm_nodeps.vbx:
-	@bash $(BOX_DIR)/host/vbx/update_vm_vbx.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(BOX_DIR)/guest $(BOX_DIR)/guest/vbx/work $(UPDATE_VM_OPTS)
+	@bash $(BOX_DIR)/host/vbx/update_vm_vbx.sh $(VM_NAME) $(VM_USER) $(VM_PASSWORD) $(BOX_DIR)/guest $(INSTALL_MEDIA_DIR)/update-files $(BOX_DIR)/guest/vbx/work $(UPDATE_VM_OPTS)
 
 # Package VirtualBox VM (no prerequisites)
 .PHONY: package_nodeps.vbx

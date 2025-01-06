@@ -101,6 +101,7 @@ fi
 
 # Provide scripts
 cp $SCRIPT_DIR/post_install_*vbx.bat $VM_INSTALL_FILES_SRC_DIR/
+cp $SCRIPT_DIR/on_login_vbx.bat $VM_INSTALL_FILES_SRC_DIR/
 
 # Create iso from install files dir
 echo "Creating iso image containing additional install files..."

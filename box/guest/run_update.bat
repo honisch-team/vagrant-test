@@ -13,7 +13,8 @@ set EXIT_CODE=0
 rem Parse options
 if "%~1"=="" goto skip_getopts
 :getopts
-if /I "%~1"=="NO_INSTALL_WU" set NO_INSTALL_WU=1 & echo Skip installing Windows Updates & goto next_opt
+if /I "%~1"=="NO_INSTALL_WU" set NO_INSTALL_WU=1 & echo Skip installing Windows Updates Online & goto next_opt
+if /I "%~1"=="NO_INSTALL_WU_OFF" set NO_INSTALL_WU_OFF=1 & echo Skip installing Windows Updates Offline & goto next_opt
 if /I "%~1"=="NO_CLEANUP_DISM" set NO_CLEANUP_DISM=1 & echo Skip cleanup Windows Update & goto next_opt
 if /I "%~1"=="NO_CLEANUP_WUD" set NO_CLEANUP_WUD=1 & echo Skip cleanup %WINDIR%\SoftwareDistribution\Download & goto next_opt
 if /I "%~1"=="NO_CLEANUP_FILES" set NO_CLEANUP_FILES=1 & echo Skip cleanup various files & goto next_opt
@@ -116,36 +117,163 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Na
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v NavPaneExpandToCurrentFolder /t REG_DWORD /d 1 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowEncryptCompressedColor /t REG_DWORD /d 1 /f
 
-rem Install KB3138612 to fix Windows Update
+rem Install Windows Updates Offline
+:install_windows_updates_offline
 echo.
-echo *** Installing KB3138612 to fix Windows Update
-wusa "%MYDIR%\kb3138612.msu" /quiet /norestart
+if defined NO_INSTALL_WU_OFF (
+  echo *** Skip installing Windows Updates Offline
+  goto after_install_windows_updates_offline
+)
+
+rem Install KB 3020369: April 2015 servicing stack update for Windows 7
+echo *** Installing KB 3020369: April 2015 servicing stack update for Windows 7
+wusa "%MYDIR%\windows6.1-kb3020369-x86_82e168117c23f7c479a97ee96c82af788d07452e.msu" /quiet /norestart
 if %ERRORLEVEL% equ 3010 (
-  echo Returncode %ERRORLEVEL% indicates success + reboot required
-  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem Install KB 2670838: Platform update for Windows 7 SP1
+echo.
+echo *** Installing KB 2670838: Platform update for Windows 7 SP1
+wusa "%MYDIR%\windows6.1-kb2670838-x86_984b8d122a688d917f81c04155225b3ef31f012e.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem KB 3125574: Convenience rollup update for Windows 7 SP1
+echo.
+echo *** Installing KB 3125574: Convenience rollup update for Windows 7 SP1
+wusa "%MYDIR%\windows6.1-kb3125574-v4-x86_ba1ff5537312561795cc04db0b02fbb0a74b2cbd.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem Install KB 2729094: IE11 prerequisite: Update for the Segoe UI symbol font
+echo.
+echo *** Installing KB 2729094: IE11 prerequisite: Update for the Segoe UI symbol font
+wusa "%MYDIR%\windows6.1-kb2729094-v2-x86.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem Reboot if required
+if "%REBOOT_PENDING%"=="1" (
+  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates_offline_2
   goto reboot_and_continue
 )
-if %ERRORLEVEL% neq 0 goto error
 
-rem Install Windows updates
-:install_windows_updates
+rem Install KB 2841134: Internet Explorer 11
+:install_windows_updates_offline_2
+echo.
+echo *** Installing KB 2841134: Internet Explorer 11
+"%MYDIR%\ie11-windows6.1-x86-en-us_fefdcdde83725e393d59f89bb5855686824d474e.exe" /quiet /norestart /update-no
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem KB 4490628: March 2019 servicing stack update for Windows 7
+echo.
+echo *** Installing KB 4490628: March 2019 servicing stack update for Windows 7
+wusa "%MYDIR%\windows6.1-kb4490628-x86_3cdb3df55b9cd7ef7fcb24fc4e237ea287ad0992.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem KB 4474419: SHA-2 code signing support update for Windows 7
+echo.
+echo *** Installing KB 4474419: SHA-2 code signing support update for Windows 7
+wusa "%MYDIR%\windows6.1-kb4474419-v3-x86_0f687d50402790f340087c576886501b3223bec6.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem Reboot if required
+if "%REBOOT_PENDING%"=="1" (
+  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates_offline_3
+  goto reboot_and_continue
+)
+
+rem KB 4534310: January 2020 Security Monthly Quality Rollup for Windows 7
+:install_windows_updates_offline_3
+echo.
+echo *** Installing KB 4534310: January 2020 Security Monthly Quality Rollup for Windows 7
+wusa "%MYDIR%\windows6.1-kb4534310-x86_887a5caab59437e8f23aa5a4608950455bb37537.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem KB 4534251: January 2020 Cumulative Security Update for Internet Explorer 11 for Windows 7
+echo.
+echo *** Installing KB 4534251: January 2020 Cumulative Security Update for Internet Explorer 11 for Windows 7
+wusa "%MYDIR%\ie11-windows6.1-kb4534251-x86_6841cf7fda1f2b47d237fa66837c155ffa45c688.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+rem KB 4536952: January 2020 Servicing Stack Update for Windows 7
+echo.
+echo *** Installing KB 4536952: January 2020 Servicing Stack Update for Windows 7
+wusa "%MYDIR%\windows6.1-kb4536952-x86_f3b49481187651f64f13a0369c86ad7caa83b190.msu" /quiet /norestart
+if %ERRORLEVEL% equ 3010 (
+  echo Return code %ERRORLEVEL% indicates success + reboot required
+  set REBOOT_PENDING=1
+) else (
+  if %ERRORLEVEL% neq 0 goto error
+)
+
+:after_install_windows_updates_offline
+rem Reboot if required
+if "%REBOOT_PENDING%"=="1" (
+  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates_online
+  goto reboot_and_continue
+)
+
+rem Install Windows updates online
+:install_windows_updates_online
 echo.
 if defined NO_INSTALL_WU (
-  echo *** Skip installing Windows Updates
-  goto after_install_windows_updates
+  echo *** Skip installing Windows Updates Online
+  goto after_install_windows_updates_online
 )
-echo *** Installing Windows Updates
+echo *** Installing Windows Updates Online
 CScript //NoLogo "%MYDIR%\toolbox.wsf" /cmd:installwindowsupdates /maxUpdates:50
 rem Script indicates success
 if %ERRORLEVEL% equ 0 (
   echo Update script indicates success
-  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates
+  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates_online
   goto exit_and_continue
 )
 rem Script indicates success + reboot required
 if %ERRORLEVEL% equ 2 (
   echo Update script indicates success + reboot required
-  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates
+  set UPDATE_NEXT_ENTRY_POINT=install_windows_updates_online
   goto reboot_and_continue
 )
 rem Script indicates no updates found
@@ -155,7 +283,7 @@ if %ERRORLEVEL% equ 3 (
 )
 rem Treat other exit codes as error
 goto error
-:after_install_windows_updates
+:after_install_windows_updates_online
 
 rem Cleanup Windows Update
 :cleanup_windows_update

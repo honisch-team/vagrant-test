@@ -46,15 +46,22 @@ function FailOnNativeError() {
 
 # Check file hash
 function CheckFileHash($filePath, $sha1) {
-    Write-Host -NoNewline "Checking hash for $filePath ..."
-    $fileHash = (Get-FileHash -Path $filePath -Algorithm 'SHA1').Hash.ToLowerInvariant()
-    if ($fileHash -eq $sha1) {
-        Write-Host "OK ($sha1)"
-        return $true
+    if (($null -ne $sha1) -and ($sha1 -ne '')) {
+        Write-Host -NoNewline "Checking hash for $filePath ..."
+
+        $fileHash = (Get-FileHash -Path $filePath -Algorithm 'SHA1').Hash.ToLowerInvariant()
+        if ($fileHash -eq $sha1) {
+            Write-Host "OK ($sha1)"
+            return $true
+        }
+        else {
+            Write-Host "failed (expected: $sha1, got:$fileHash)"
+            return $false
+        }
     }
     else {
-        Write-Host "failed (expected: $sha1, got:$fileHash)"
-        return $false
+        Write-Host "Skipping hash check for $filePath"
+        return $true
     }
 }
 

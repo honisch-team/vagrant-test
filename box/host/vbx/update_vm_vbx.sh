@@ -33,23 +33,25 @@ downloadTools() {
 
 # Display usage
 display_usage() {
-  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD SRC_DIR WORK_DIR\n"
+  echo -e "Usage: $0 [OPTION] NAME USER PASSWORD GUEST_FILES_DIR UPDATE_FILES_DIR WORK_DIR\n"
   echo "Update virtual machine after operating system installation"
-  echo "NAME:      Name of VM"
-  echo "USER:      Username for VM logon"
-  echo "PASSWORD:  Password for VM logon"
-  echo "SRC_DIR:   Directory with files to copy to VM and run"
-  echo "WORK_DIR:  Working dir for intermediate files"
+  echo "NAME:             Name of VM"
+  echo "USER:             Username for VM logon"
+  echo "PASSWORD:         Password for VM logon"
+  echo "GUEST_FILES_DIR:  Directory with files to copy to VM and run"
+  echo "UPDATE_FILES_DIR: Directory with files to copy to VM and run"
+  echo "WORK_DIR:         Working dir for intermediate files"
   echo ""
   echo "Options:"
-  echo "  -h, --help          display this help and exit"
-  echo "  --no-install-wu     don't install windows updates"
-  echo "  --no-cleanup        don't cleanup at all"
-  echo "  --no-cleanup-dism   don't cleanup using DISM"
-  echo "  --no-cleanup-wud    don't cleanup Windows Updates downloads"
-  echo "  --no-cleanup-files  don't cleanup various files"
-  echo "  --no-cleanmgr       don't use Windows CleanMgr (Disk Cleanup)"
-  echo "  --no-zerodisk       don't zero free disk space"
+  echo "  -h, --help           display this help and exit"
+  echo "  --no-install-wu      don't install Windows Updates Online"
+  echo "  --no-install-wu-off  don't install Windows Updates Offline"
+  echo "  --no-cleanup         don't cleanup at all"
+  echo "  --no-cleanup-dism    don't cleanup using DISM"
+  echo "  --no-cleanup-wud     don't cleanup Windows Updates downloads"
+  echo "  --no-cleanup-files   don't cleanup various files"
+  echo "  --no-cleanmgr        don't use Windows CleanMgr (Disk Cleanup)"
+  echo "  --no-zerodisk        don't zero free disk space"
   echo ""
 }
 
@@ -58,12 +60,13 @@ display_usage() {
 
 # Parse options
 EXIT_CODE=0
-VALID_ARGS=$(getopt -o h --long help,no-install-wu,no-cleanup,no-cleanup-dism,no-cleanup-wud,no-cleanup-files,no-cleanup-cleanmgr,no-zerodisk --name "$0" -- "$@") || EXIT_CODE=$?
+VALID_ARGS=$(getopt -o h --long help,no-install-wu,no-install-wu-off,no-cleanup,no-cleanup-dism,no-cleanup-wud,no-cleanup-files,no-cleanup-cleanmgr,no-zerodisk --name "$0" -- "$@") || EXIT_CODE=$?
 if [ $EXIT_CODE != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
 eval set -- ${VALID_ARGS}
 
 # Set initial values
 OPT_NO_INSTALL_WU=0
+OPT_NO_INSTALL_WU_OFF=0
 OPT_NO_CLEANUP=0
 OPT_NO_CLEANUP_DISM=0
 OPT_NO_CLEANUP_WUD=0
@@ -80,6 +83,10 @@ while true ; do
       ;;
     --no-install-wu)
       OPT_NO_INSTALL_WU=1
+      shift
+      ;;
+    --no-install-wu-off)
+      OPT_NO_INSTALL_WU_OFF=1
       shift
       ;;
     --no-cleanup)
@@ -119,7 +126,7 @@ while true ; do
 done
 
 # Check for correct number of arguments
-if [ $# -ne 5 ] ; then
+if [ $# -ne 6 ] ; then
   display_usage
   exit 1
 fi
@@ -128,8 +135,9 @@ fi
 VM_NAME=$1
 VM_USER=$2
 VM_PASSWORD=$3
-VM_SRC_DIR=$4
-VM_WORK_DIR=$5
+VM_GUEST_FILES_DIR=$4
+VM_UPDATE_FILES_DIR=$5
+VM_WORK_DIR=$6
 
 
 echo "**************************************"
@@ -137,13 +145,18 @@ echo "*** Updating VM \"$VM_NAME\" after operating system install"
 echo "**************************************"
 echo "User: $VM_USER"
 echo "Password: $VM_PASSWORD"
-echo "Source dir: $VM_SRC_DIR"
+echo "Guest files dir: $VM_GUEST_FILES_DIR"
+echo "Update files dir: $VM_UPDATE_FILES_DIR"
 echo "Work dir: $VM_WORK_DIR"
 echo ""
 VM_GUEST_PARAMS=()
 if [ "$OPT_NO_INSTALL_WU" -ne 0 ] ; then
-  echo "Don't install Windows Updates"
+  echo "Don't install Windows Updates Online"
   VM_GUEST_PARAMS+=(NO_INSTALL_WU)
+fi
+if [ "$OPT_NO_INSTALL_WU_OFF" -ne 0 ] ; then
+  echo "Don't install Windows Updates Offline"
+  VM_GUEST_PARAMS+=(NO_INSTALL_WU_OFF)
 fi
 if [ "$OPT_NO_CLEANUP_DISM" -ne 0 ] || [ "$OPT_NO_CLEANUP" -ne 0 ] ; then
   echo "Don't cleanup using DISM"
@@ -170,10 +183,13 @@ fi
 if [ ! -d $VM_WORK_DIR ] ; then
   mkdir -p $VM_WORK_DIR
 fi
-cp "$VM_SRC_DIR"/* "$VM_WORK_DIR/" || true
+echo "Copying guest files from \"$VM_GUEST_FILES_DIR\" to \"$VM_WORK_DIR\"..."
+cp "$VM_GUEST_FILES_DIR"/* "$VM_WORK_DIR/" || true
+echo "Copying update files from \"$VM_UPDATE_FILES_DIR\" to \"$VM_WORK_DIR\"..."
+cp "$VM_UPDATE_FILES_DIR"/* "$VM_WORK_DIR/" || true
 
 # Download tools for setup
-downloadTools $VM_WORK_DIR
+#downloadTools $VM_WORK_DIR
 
 # Startup VM
 echo "Starting VM \"$VM_NAME\"..."
@@ -181,7 +197,7 @@ VBoxManage startvm $VM_NAME --type headless
 waitUntilVmStartupComplete $VM_NAME
 
 # Run update
-echo "Copying update files from \"$VM_SRC_DIR\" to VM..."
+echo "Copying update files from \"$VM_WORK_DIR\" to VM..."
 VBoxManage guestcontrol $VM_NAME mkdir --parents --username=$VM_USER --password=$VM_PASSWORD "C:\\temp\\work" || echo "Ignoring error"
 VBoxManage guestcontrol $VM_NAME copyto --username=$VM_USER --password=$VM_PASSWORD --target-directory "C:\\Temp\\work" $VM_WORK_DIR
 
@@ -214,7 +230,7 @@ do
     # Startup VM again
     echo "Starting VM ..."
     VBoxManage startvm $VM_NAME --type headless
-    waitUntilVmStartupComplete $VM_NAME
+    waitUntilVmUserLoggedIn $VM_NAME
     ;;
   35)  # Script exit code 3: Re-run update script
     echo "Re-run update script"
@@ -230,6 +246,7 @@ done
 # Cleanup
 if [ "$OPT_NO_CLEANUP_FILES" -eq 0 ] ; then
   echo "Removing files from VM"
+  VBoxManage guestcontrol $VM_NAME run --username=$VM_USER --password=$VM_PASSWORD --exe reg.exe -- delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v on_login_vbx /f || true
   VBoxManage guestcontrol $VM_NAME rmdir --username=$VM_USER --password=$VM_PASSWORD --recursive "C:\\Temp"
 else
   echo "Debug mode: Skip removing files from VM"
